@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>コンベア</title>
+    <script type="text/javascript" src="./game_convey.js"></script>
+    <link rel="stylesheet" href="../game04/style04.css">
+</head>
+<body>
+    <h1>コンベア</h1>
+    <div id="canvas-wrapper">
+        <canvas id="canvas1" width="1248" height="720"></canvas>
+    </div>
+    <div class="input-name">
+        [YOUR NAME]<br>
+        <input type="text" value="" onInput="checkForm(this)" class="name-form">
+    </div>
+    <div class="discription">
+        <p>
+        [ 操作方法 ]<br>
+        キーボードの'W', 'A', 'S', 'D'で移動します<br>
+        フィールドに配置されているお芋を食べると得点が加算されます<br>
+        フィールドで徘徊している猫と接触するとゲームオーバーです<br>
+        迷路の行き止まりにはワープポイントが設置されています<br>
+        ワープポイントの行き先は、フィールドが生成されたときに一意的に定まっています<br>
+        'ICE'と書いてある床を踏むと一定時間の間、猫がアイス状になって食べる事が出来ます<br>
+        この時間の間にたくさん猫を食べるほど得点が加算されます
+
+     
+        </p>
+        <p>
+        <a href="../games.html">ゲーム一覧ページへ</a>
+        </p>
+    </div>
+    <div id="plays" class="smalltext">取得中...</div>
+    <div class="scoreranking">
+        <p>
+        <span id="scores">(スコアランキングを取得しています...)</span><br>
+
+        </p>
+    </div>
+
+</body>
+</html>
+
+

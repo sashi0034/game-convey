@@ -356,7 +356,7 @@ class Test extends Actor
     {
         console.log(`${this.time}`);
         this.x++;
-        this.spr.setImage(images.punicat, this.x, this.x);
+        this.spr.setXY(this.x, this.x);
         super.update();        
     }
 
@@ -743,6 +743,11 @@ class Sprite
 class Graph
 {
     public mat: HTMLImageElement;
+
+    constructor()
+    {
+        this.mat = new Image();
+    }
 
     // 描画
     public drawGraph(x: number, y: number, u: number, v: number, w: number, h: number, scale): void 

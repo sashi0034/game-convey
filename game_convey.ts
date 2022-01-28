@@ -181,11 +181,19 @@ class Images
 {
 
     wallBlock: Graph = Graphics.loadGraph("./images/punicat_24x24.png");
-    
+    fieldTile: Graph = Graphics.loadGraph("./images/fieldtile_24x24.png");
 
     punicat: Graph = Graphics.loadGraph("./images/punicat_24x24.png");
 
 }
+
+
+const ACTOR_Z =
+{
+    PLAYER: 0,
+    BACKGRAPHIC: 2000,
+} as const;
+type ActorZ = typeof ACTOR_Z[keyof typeof ACTOR_Z];
 
 
 
@@ -276,6 +284,7 @@ class Main
     static setup()
     {
         new Test();
+        new FieldManager();
 
         
     }
@@ -314,7 +323,7 @@ class Main
 
 
 
-// ゲームオブジェクト基底
+// 基底オブジェクト
 class Actor
 {
     spr: Sprite;
@@ -327,9 +336,9 @@ class Actor
         this.spr.setBelong(this);
     }
 
-    private static callUpdate(spr: Sprite): void
+    private static callUpdate(hSpr: Sprite): void
     {
-        let self: Actor = spr.getBelong();
+        let self: Actor = hSpr.getBelong();
         self.update();
     }
 
@@ -337,7 +346,23 @@ class Actor
     {
         this.time++;
     }
+}
 
+abstract class ActorDrawingBySelf extends Actor
+{
+    constructor()
+    {
+        super();
+        this.spr.setDrawingMethod(ActorDrawingBySelf.callDrawing);
+    }
+
+    private static callDrawing(hSpr: Sprite, hX: number, hY: number): void
+    {
+        let self: ActorDrawingBySelf = hSpr.getBelong();
+        self.drawing(hX, hY);
+    }
+
+    protected abstract drawing(hX: number, hY: number): void;
 }
 
 
@@ -352,15 +377,90 @@ class Test extends Actor
         this.spr.setImage(images.punicat, 0, 0, 24, 24);
     }
 
-    protected update(): void 
+    protected override update(): void 
     {
-        console.log(`${this.time}`);
+        //console.log(`${this.time}`);
         this.x++;
         this.spr.setXY(this.x, this.x);
         super.update();        
     }
 
 }
+
+
+
+
+
+
+
+// フィールド管理
+class FieldManager extends Actor
+{
+    static own: FieldManager = null;
+
+    constructor()
+    {
+        super();
+        new Floorlayer();
+    }
+
+}
+
+
+// 基底フィールドレイヤー
+abstract class FieldLayerBase extends ActorDrawingBySelf
+{
+    protected gridUnit: number = 24;
+    protected abstract z: number;
+
+    constructor()
+    {
+        super();
+        this.setSprZ();
+    }
+
+    protected setSprZ()
+    {
+        this.spr.setZ(this.z);
+    }
+
+    protected override drawing(hX: number, hY: number): void 
+    {
+        for (let x=0; x<(ROUGH_WIDTH/this.gridUnit|0); x++)
+        {
+            for (let y=0; y<(ROUGH_HEIGHT/this.gridUnit|0); y++)
+            {
+                let displayX = (hX|0) + x * this.gridUnit;
+                let displayY = (hY|0) + y * this.gridUnit;
+                displayX *= ROUGH_SCALE;
+                displayY *= ROUGH_SCALE;
+
+                this.chipDrawing(x, y, displayX, displayY);
+            }
+        }
+    }
+
+    protected abstract chipDrawing(matX: number, matY:number, dpX: number, dpY: number): void;
+}
+
+// 床
+class Floorlayer extends FieldLayerBase
+{
+    protected z: number = ACTOR_Z.BACKGRAPHIC;
+
+    constructor()
+    {
+        super();
+    }
+
+    protected override chipDrawing(matX: number, matY: number, dpX: number, dpY: number): void
+    {
+        images.fieldTile.drawGraph(dpX, dpY, 0, 0, 24, 24, ROUGH_SCALE);
+    }
+}
+
+
+
 
 
 

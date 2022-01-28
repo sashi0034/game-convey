@@ -411,16 +411,18 @@ class FieldManager extends Actor
 abstract class FieldLayerBase extends ActorDrawingBySelf
 {
     protected gridUnit: number = 24;
-    protected abstract z: number;
+    protected z: number;
 
-    constructor()
+    constructor(z)
     {
         super();
+        this.z = z;
         this.setSprZ();
     }
 
     protected setSprZ()
     {
+        console.log(this.z);
         this.spr.setZ(this.z);
     }
 
@@ -446,11 +448,10 @@ abstract class FieldLayerBase extends ActorDrawingBySelf
 // 床
 class Floorlayer extends FieldLayerBase
 {
-    protected z: number = ACTOR_Z.BACKGRAPHIC;
-
     constructor()
     {
-        super();
+        super(ACTOR_Z.BACKGRAPHIC);
+        console.log(this.z);
     }
 
     protected override chipDrawing(matX: number, matY: number, dpX: number, dpY: number): void

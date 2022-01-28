@@ -1,2 +1,5 @@
 node_modules/
 game_convey.js
+main.js
+sprite.js
+gameUtils.js

@@ -1,4 +1,5 @@
 import { context } from "./main.js";
+import { Sprite } from "./sprite.js";
 
 
 // 画像
@@ -203,5 +204,50 @@ export class Useful
         return ret<0 ? ret+m : ret;
     }
 }
+
+
+
+// 基底オブジェクト
+export class Actor
+{
+    spr: Sprite;
+    time: number = 0;
+
+    constructor()
+    {
+        this.spr = new Sprite();
+        this.spr.setUpdateMethod(Actor.callUpdate)
+        this.spr.setBelong(this);
+    }
+
+    private static callUpdate(hSpr: Sprite): void
+    {
+        let self: Actor = hSpr.getBelong();
+        self.update();
+    }
+
+    protected update(): void
+    {
+        this.time++;
+    }
+}
+
+export abstract class ActorDrawingBySelf extends Actor
+{
+    constructor()
+    {
+        super();
+        this.spr.setDrawingMethod(ActorDrawingBySelf.callDrawing);
+    }
+
+    private static callDrawing(hSpr: Sprite, hX: number, hY: number): void
+    {
+        let self: ActorDrawingBySelf = hSpr.getBelong();
+        self.drawing(hX, hY);
+    }
+
+    protected abstract drawing(hX: number, hY: number): void;
+}
+
 
 

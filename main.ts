@@ -1,6 +1,6 @@
 
 import { Sprite } from "./sprite.js";
-import { Graphics, Graph, Sound, Useful } from "./gameUtils.js";
+import { Graphics, Graph, Sound, Useful, Actor, ActorDrawingBySelf } from "./gameUtils.js";
 
 export var context;
 
@@ -331,48 +331,6 @@ class Main
 }
 
 
-
-// 基底オブジェクト
-class Actor
-{
-    spr: Sprite;
-    time: number = 0;
-
-    constructor()
-    {
-        this.spr = new Sprite();
-        this.spr.setUpdateMethod(Actor.callUpdate)
-        this.spr.setBelong(this);
-    }
-
-    private static callUpdate(hSpr: Sprite): void
-    {
-        let self: Actor = hSpr.getBelong();
-        self.update();
-    }
-
-    protected update(): void
-    {
-        this.time++;
-    }
-}
-
-abstract class ActorDrawingBySelf extends Actor
-{
-    constructor()
-    {
-        super();
-        this.spr.setDrawingMethod(ActorDrawingBySelf.callDrawing);
-    }
-
-    private static callDrawing(hSpr: Sprite, hX: number, hY: number): void
-    {
-        let self: ActorDrawingBySelf = hSpr.getBelong();
-        self.drawing(hX, hY);
-    }
-
-    protected abstract drawing(hX: number, hY: number): void;
-}
 
 
 // テスト

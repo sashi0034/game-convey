@@ -126,6 +126,7 @@ class Images
 
     wallBlock: Graph = Graphics.loadGraph("./images/punicat_24x24.png");
     fieldTile: Graph = Graphics.loadGraph("./images/fieldtile_24x24.png");
+    ArrowTile: Graph = Graphics.loadGraph("./images/arrow_24x24.png");
 
     punicat: Graph = Graphics.loadGraph("./images/punicat_24x24.png");
 
@@ -228,7 +229,7 @@ class Main
     static setup()
     {
         new Test();
-        new FieldManager();
+        new BackgraphiManager();
 
         
     }
@@ -296,15 +297,31 @@ class Test extends Actor
 
 
 
-// フィールド管理
-class FieldManager extends Actor
+// コンベア制御メソッド
+class Conveyor
 {
-    static sole: FieldManager = null;
+    public static isArrowTile(x: number, y: number): boolean
+    {
+        return (x+1) % 3==0 && (y+2) % 3==0;
+    }
+}
+
+
+
+
+
+
+
+// 背景管理
+class BackgraphiManager extends Actor
+{
+    static sole: BackgraphiManager = null;
 
     constructor()
     {
         super();
         new Floorlayer();
+        new TileLayer();
     }
 
 }
@@ -313,13 +330,18 @@ class FieldManager extends Actor
 // 基底フィールドレイヤー
 abstract class FieldLayerBase extends ActorDrawingBySelf
 {
-    protected gridUnit: number = 24;
+    protected gridUnit = 24;
     protected z: number;
 
-    constructor(z: number)
+    protected constructor(z: number);
+    protected constructor(z: number, gridUnit: number);
+
+
+    protected constructor(z: number, gridUnit?: number)
     {
         super();
         this.z = z;
+        if (gridUnit!=undefined) this.gridUnit = gridUnit;
         this.setSprZ();
     }
 
@@ -330,9 +352,9 @@ abstract class FieldLayerBase extends ActorDrawingBySelf
 
     protected override drawing(hX: number, hY: number): void 
     {
-        for (let x=0; x<(ROUGH_WIDTH/this.gridUnit|0); x++)
+        for (let x=0; x<=(ROUGH_WIDTH/this.gridUnit|0); x++)
         {
-            for (let y=0; y<(ROUGH_HEIGHT/this.gridUnit|0); y++)
+            for (let y=0; y<=(ROUGH_HEIGHT/this.gridUnit|0); y++)
             {
                 let displayX = (hX|0) + x * this.gridUnit;
                 let displayY = (hY|0) + y * this.gridUnit;
@@ -347,7 +369,7 @@ abstract class FieldLayerBase extends ActorDrawingBySelf
     protected abstract chipDrawing(matX: number, matY:number, dpX: number, dpY: number): void;
 }
 
-// 床
+// 奥床
 class Floorlayer extends FieldLayerBase
 {
     constructor()
@@ -362,6 +384,32 @@ class Floorlayer extends FieldLayerBase
 }
 
 
+// タイルレイヤー
+class TileLayer extends ActorDrawingBySelf
+{
+    constructor()
+    {
+        super();
+        this.spr.setZ(ActorZ.BACKGRAPHIC-1);
+    }
+
+    protected override drawing(hX: number, hY: number): void 
+    {
+        for (let x=0; x<=8; x++)
+        {
+            for (let y=0; y<=5; y++)
+            {
+                let dpX = (x * 3 + 2) * 16 * ROUGH_SCALE;
+                let dpY = (y * 3 + 1) * 16 * ROUGH_SCALE;
+
+                images.ArrowTile.drawGraph(dpX, dpY, 0, 0, 16, 16, ROUGH_SCALE);
+            }
+        }
+
+
+
+    }
+}
 
 
 

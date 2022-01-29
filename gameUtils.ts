@@ -216,7 +216,7 @@ export class Input
 
     private mouse: Mouse
     public get getMouse(): Mouse {return this.mouse};
-    public static readonly CLICK = { NONE: -1,  RIGHT: 0 } as const
+    public static readonly Click = { NONE: -1,  RIGHT: 0 } as const
     
     private isKeyDown: {[key: string]: boolean} = {}
     public get getKeyDown(): {[key: string]: boolean} {return this.isKeyDown}; 
@@ -270,7 +270,7 @@ export class Input
 
     private static onMouseKey( e ) 
     {
-        Input.sole.mouse.state = Input.CLICK.NONE;
+        Input.sole.mouse.state = Input.Click.NONE;
     }
     
     private static onMouseDown( e ) {
@@ -278,7 +278,7 @@ export class Input
     }
     
     private static onMouseUp( e ) {
-        Input.sole.mouse.state = Input.CLICK.NONE;
+        Input.sole.mouse.state = Input.Click.NONE;
     }
 
     
@@ -318,14 +318,14 @@ export class Input
     
     
 }
-type CLICK = typeof Input.CLICK[keyof typeof Input.CLICK];
+type Click = typeof Input.Click[keyof typeof Input.Click];
 
 
 class Mouse
 {
     x: number = 0
     y: number = 0
-    state: CLICK = Input.CLICK.NONE
+    state: Click = Input.Click.NONE
 
     constructor()
     {

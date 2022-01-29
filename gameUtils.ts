@@ -1,4 +1,4 @@
-import { context } from "./main.js";
+import { context, canvas } from "./main.js";
 import { Sprite } from "./sprite.js";
 
 
@@ -204,6 +204,147 @@ export class Useful
         return ret<0 ? ret+m : ret;
     }
 }
+
+
+
+
+
+// 入力
+export class Input
+{
+    private static sole = null;
+
+    private mouse: Mouse
+    public get getMouse(): Mouse {return this.mouse};
+    public static readonly CLICK = { NONE: -1,  RIGHT: 0 } as const
+    
+    private isKeyDown: {[key: string]: boolean} = {}
+    public get getKeyDown(): {[key: string]: boolean} {return this.isKeyDown}; 
+    private keyUse: string[] = []
+
+    public constructor(keyUse: string[])
+    {
+        if (Input.sole != null) console.error("Input instance has already exist.");
+        Input.sole = this;
+
+        this.mouse = new Mouse;
+        this.keyUse = keyUse;
+
+        document.onmousemove = Input.onMouseMove;    // マウス移動ハンドラ
+        document.onmouseup = Input.onMouseUp;        // マウスアップハンドラ
+        document.onmousedown = Input.onMouseDown;    // マウスダウンハンドラ
+
+        // キーボード入力
+        Input.onKeyInit();
+        document.addEventListener("keypress", Input.onKeyDown);
+        document.addEventListener("keyup", Input.onKeyUp);
+    }
+
+    public end()
+    {
+        Input.sole = null;
+    }
+
+    private static onMouseMove( e ) 
+    {
+        console.log(Input.sole.mouse.x, Input.sole.mouse.y)
+        Input.sole.mouse.x = e.clientX;
+        Input.sole.mouse.y = e.clientY;
+        let pos = Input.clientToCanvas( canvas, Input.sole.mouse.x, Input.sole.mouse.y );
+        Input.sole.mouse.x = pos.x + window.pageXOffset
+        Input.sole.mouse.y = pos.y + window.pageYOffset
+        
+    }
+
+    private static clientToCanvas(canvas, clientX, clientY) 
+    {
+        let cx = clientX - canvas.offsetLeft + document.body.scrollLeft;
+        let cy = clientY - canvas.offsetTop + document.body.scrollTop;
+        
+        let ret = 
+        {
+            x: cx,
+            y: cy
+        };
+        return ret;
+    }
+
+    private static onMouseKey( e ) 
+    {
+        Input.sole.mouse.state = Input.CLICK.NONE;
+    }
+    
+    private static onMouseDown( e ) {
+        Input.sole.mouse.state = e.button;
+    }
+    
+    private static onMouseUp( e ) {
+        Input.sole.mouse.state = Input.CLICK.NONE;
+    }
+
+    
+    private static onKeyInit() {
+    for (let i=0; i<Input.sole.keyUse.length; i++)
+    {
+        Input.sole.isKeyDown[Input.sole.keyUse[i]] = false;
+    }
+}
+
+    private static onKeyDown(e) {
+    
+    for (let i=0; i<Input.sole.keyUse.length; i++)
+    {
+        let c = Input.sole.keyUse[i];
+        if (e.key === c || e.key === c.toUpperCase())
+        {
+            Input.sole.isKeyDown[c] = true;
+        }
+    }
+}
+
+    private static onKeyUp ( e ){
+    for (let i=0; i<Input.sole.keyUse.length; i++)
+    {
+        let c = Input.sole.keyUse[i];
+        if (e.key === c || e.key === c.toUpperCase())
+        {
+            Input.sole.isKeyDown[c] = false;
+        }
+    }
+}
+
+
+
+
+    
+    
+}
+type CLICK = typeof Input.CLICK[keyof typeof Input.CLICK];
+
+
+class Mouse
+{
+    x: number = 0
+    y: number = 0
+    state: CLICK = Input.CLICK.NONE
+
+    constructor()
+    {
+        
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

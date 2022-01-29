@@ -1,26 +1,30 @@
 
 import { Sprite } from "./sprite.js";
-import { Graphics, Graph, Sound, Useful, Actor, ActorDrawingBySelf } from "./gameUtils.js";
+import {
+    Graphics,
+    Graph,
+    Sound,
+    Input,
+    Useful,
+    Actor,
+    ActorDrawingBySelf,
+} from "./gameUtils.js";
 
 export var context;
+export var canvas;
 
-
-var canvas;
 var gameLoopTimer;
-var curPosX = 0;
-var curPosY = 0;
 
 const CLICK_NONE = -1, CLICK_RIGHT = 0;
-var mouseState = -1;
 
 var images: Images;
+var input: Input;
 
 var playerName: string="";
 var gameState: number=0;
 var gameScore: number=0;
 
 const KEY_USE = ['w', 'a', 's', 'd', 'Enter'];
-var isKeyDown = {};
 
 
 const GAME_BREAK = -1;
@@ -53,6 +57,8 @@ window.onload = function()
         context.webkitImageSmoothingEnabled = this.checked;
         context.msImageSmoothingEnabled = this.checked;
 
+        input = new Input(KEY_USE);
+
         Sprite.init();
         images = new Images();
 
@@ -60,15 +66,6 @@ window.onload = function()
         //SceneChage.toTitle();
         SceneChage.toMain();
         
-        document.onmousemove = onMouseMove;   // マウス移動ハンドラ
-        document.onmouseup = onMouseUp;       // マウスアップハンドラ
-        document.onmousedown = onMouseDown;   // マウスダウンハンドラ
-
-        onKeyInit();
-        document.addEventListener("keypress", onKeyDown); // キーボード入力
-        document.addEventListener("keyup", onKeyUp);
-
-
     }
 }
 
@@ -118,70 +115,9 @@ function checkForm($this)
 }
 
 
-function onMouseMove( e ) {
-    curPosX = e.clientX;
-    curPosY = e.clientY;
-    let pos = clientToCanvas( canvas, curPosX, curPosY );
-    curPosX = pos.x + window.pageXOffset;
-    curPosY = pos.y + window.pageYOffset;
-}
-
-function onKeyInit() {
-    for (let i=0; i<KEY_USE.length; i++)
-    {
-        isKeyDown[KEY_USE[i]] = false;
-    }
-}
-
-function onKeyDown(e) {
-    //console.log(e.key);
-    for (let i=0; i<KEY_USE.length; i++)
-    {
-        let c = KEY_USE[i];
-        if (e.key === c || e.key === c.toUpperCase())
-        {
-            isKeyDown[c] = true;
-        }
-    }
-}
-
-function onKeyUp ( e ){
-    for (let i=0; i<KEY_USE.length; i++)
-    {
-        let c = KEY_USE[i];
-        if (e.key === c || e.key === c.toUpperCase())
-        {
-            isKeyDown[c] = false;
-        }
-    }
-}
 
 
 
-function onMouseKey( e ) {
-    mouseState = -1;
-}
-
-
-function onMouseDown( e ) {
-    mouseState = e.button;
-}
-
-function onMouseUp( e ) {
-    mouseState = -1;
-}
-
-
-function clientToCanvas(canvas, clientX, clientY) {
-    let cx = clientX - canvas.offsetLeft + document.body.scrollLeft;
-    let cy = clientY - canvas.offsetTop + document.body.scrollTop;
-    //console.log(clientY , canvas.offsetTop , document.body.scrollTop);
-    let ret = {
-        x: cx,
-        y: cy
-    };
-    return ret;
-}
 
 
 
@@ -242,8 +178,8 @@ class Title
     {
         Sprite.allUpdate();
         Sprite.allDrawing();
-        if ((mouseState==0 && Useful.between(curPosX,0,SCREEN_WIDTH) && Useful.between(curPosY,0,SCREEN_HEIGHT)) ||
-            isKeyDown['Enter']) 
+        if ((input.getMouse.state==Input.CLICK.RIGHT && Useful.between(input.getMouse.x, 0,SCREEN_WIDTH) && Useful.between(input.getMouse.y, 0,SCREEN_HEIGHT)) ||
+            input.getKeyDown['Enter']) 
         {
             Sprite.deleteAll(true);
             Sound.playSoundFile("./sounds/startPush.mp3");
@@ -347,9 +283,10 @@ class Test extends Actor
     protected override update(): void 
     {
         //console.log(`${this.time}`);
+
         this.x++;
         this.spr.setXY(this.x, this.x);
-        super.update();        
+        super.update();
     }
 
 }
@@ -363,7 +300,7 @@ class Test extends Actor
 // フィールド管理
 class FieldManager extends Actor
 {
-    static own: FieldManager = null;
+    static sole: FieldManager = null;
 
     constructor()
     {
@@ -380,7 +317,7 @@ abstract class FieldLayerBase extends ActorDrawingBySelf
     protected gridUnit: number = 24;
     protected z: number;
 
-    constructor(z)
+    constructor(z: number)
     {
         super();
         this.z = z;
@@ -389,7 +326,6 @@ abstract class FieldLayerBase extends ActorDrawingBySelf
 
     protected setSprZ()
     {
-        console.log(this.z);
         this.spr.setZ(this.z);
     }
 
@@ -418,7 +354,6 @@ class Floorlayer extends FieldLayerBase
     constructor()
     {
         super(ACTOR_Z.BACKGRAPHIC);
-        console.log(this.z);
     }
 
     protected override chipDrawing(matX: number, matY: number, dpX: number, dpY: number): void
@@ -426,45 +361,6 @@ class Floorlayer extends FieldLayerBase
         images.fieldTile.drawGraph(dpX, dpY, 0, 0, 24, 24, ROUGH_SCALE);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

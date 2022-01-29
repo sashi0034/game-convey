@@ -15,29 +15,28 @@ export var canvas;
 
 var gameLoopTimer;
 
-const CLICK_NONE = -1, CLICK_RIGHT = 0;
-
 var images: Images;
 var input: Input;
 
+const GameState = 
+{
+    BREAK: -1,
+    PLAYING: 0,
+    OVER: 1,
+} as const
+type GameState = typeof GameState[keyof typeof GameState];
+
 var playerName: string="";
-var gameState: number=0;
+var gameState: GameState = GameState.PLAYING;
 var gameScore: number=0;
 
 const KEY_USE = ['w', 'a', 's', 'd', 'Enter'];
-
-
-const GAME_BREAK = -1;
-const GAME_PLAYING=0;
-const GAME_OVER=1;
 
 const ROUGH_SCALE = 3;
 const ROUGH_WIDTH = 416;
 const ROUGH_HEIGHT = 240;
 const SCREEN_WIDTH = ROUGH_SCALE*ROUGH_WIDTH;
 const SCREEN_HEIGHT = ROUGH_SCALE*ROUGH_HEIGHT;
-
-const COL_ICON = 1 << 0;
 
 
 var socket = new WebSocket('ws://127.0.0.1:5006');
@@ -133,12 +132,12 @@ class Images
 }
 
 
-const ACTOR_Z =
+const ActorZ =
 {
     PLAYER: 0,
     BACKGRAPHIC: 2000,
 } as const;
-type ActorZ = typeof ACTOR_Z[keyof typeof ACTOR_Z];
+type ActorZ = typeof ActorZ[keyof typeof ActorZ];
 
 
 
@@ -172,13 +171,13 @@ class Title
     static setup()
     {
         new TitleUi();
-        gameState = GAME_BREAK;
+        gameState = GameState.BREAK;
     }
     static loop()
     {
         Sprite.allUpdate();
         Sprite.allDrawing();
-        if ((input.getMouse.state==Input.CLICK.RIGHT && Useful.between(input.getMouse.x, 0,SCREEN_WIDTH) && Useful.between(input.getMouse.y, 0,SCREEN_HEIGHT)) ||
+        if ((input.getMouse.state==Input.Click.RIGHT && Useful.between(input.getMouse.x, 0,SCREEN_WIDTH) && Useful.between(input.getMouse.y, 0,SCREEN_HEIGHT)) ||
             input.getKeyDown['Enter']) 
         {
             Sprite.deleteAll(true);
@@ -243,12 +242,12 @@ class Main
         Main.count++;
         switch(gameState)
         {
-            case GAME_PLAYING:
+            case GameState.PLAYING:
                 {
                     //if (Main.count%12==0) gameScore++;
                     break;
                 }
-            case GAME_OVER:
+            case GameState.OVER:
                 {
                     Main.finishCount++;
                     if (Main.finishCount>60*4)
@@ -353,7 +352,7 @@ class Floorlayer extends FieldLayerBase
 {
     constructor()
     {
-        super(ACTOR_Z.BACKGRAPHIC);
+        super(ActorZ.BACKGRAPHIC);
     }
 
     protected override chipDrawing(matX: number, matY: number, dpX: number, dpY: number): void

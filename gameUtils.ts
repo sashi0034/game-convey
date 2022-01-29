@@ -247,7 +247,6 @@ export class Input
 
     private static onMouseMove( e ) 
     {
-        console.log(Input.sole.mouse.x, Input.sole.mouse.y)
         Input.sole.mouse.x = e.clientX;
         Input.sole.mouse.y = e.clientY;
         let pos = Input.clientToCanvas( canvas, Input.sole.mouse.x, Input.sole.mouse.y );

@@ -125,8 +125,10 @@ class Images
 {
 
     wallBlock: Graph = Graphics.loadGraph("./images/punicat_24x24.png");
-    fieldTile: Graph = Graphics.loadGraph("./images/fieldtile_24x24.png");
-    ArrowTile: Graph = Graphics.loadGraph("./images/arrow_24x24.png");
+    fieldTile: Graph = Graphics.loadGraph("./images/fieldtile_16x16.png");
+    roadTile: Graph = Graphics.loadGraph("./images/roadtile_16x16.png");
+    arrowTile: Graph = Graphics.loadGraph("./images/arrow_16x16.png");
+    brick: Graph = Graphics.loadGraph("./images/brick_32x32.png");
 
     punicat: Graph = Graphics.loadGraph("./images/punicat_24x24.png");
 
@@ -330,7 +332,7 @@ class BackgraphiManager extends Actor
 // 基底フィールドレイヤー
 abstract class FieldLayerBase extends ActorDrawingBySelf
 {
-    protected gridUnit = 24;
+    protected gridUnit = 16;
     protected z: number;
 
     protected constructor(z: number);
@@ -379,7 +381,7 @@ class Floorlayer extends FieldLayerBase
 
     protected override chipDrawing(matX: number, matY: number, dpX: number, dpY: number): void
     {
-        images.fieldTile.drawGraph(dpX, dpY, 0, 0, 24, 24, ROUGH_SCALE);
+        images.fieldTile.drawGraph(dpX, dpY, 0, 0, 16, 16, ROUGH_SCALE);
     }
 }
 
@@ -395,16 +397,48 @@ class TileLayer extends ActorDrawingBySelf
 
     protected override drawing(hX: number, hY: number): void 
     {
-        for (let x=0; x<=8; x++)
+        for (let x=0; x<8; x++)
         {
-            for (let y=0; y<=5; y++)
+            for (let y=0; y<5; y++)
             {
                 let dpX = (x * 3 + 2) * 16 * ROUGH_SCALE;
                 let dpY = (y * 3 + 1) * 16 * ROUGH_SCALE;
 
-                images.ArrowTile.drawGraph(dpX, dpY, 0, 0, 16, 16, ROUGH_SCALE);
+                images.arrowTile.drawGraph(dpX, dpY, 0, 0, 16, 16, ROUGH_SCALE);
             }
         }
+
+        for (let x=-1; x<8; x++)
+        {
+            for (let y=-1; y<5; y++)
+            {
+                let dpX = (x * 3 + 2) * 16 * ROUGH_SCALE;
+                let dpY = (y * 3 + 1) * 16 * ROUGH_SCALE;
+
+                // 横縞
+                images.roadTile.drawGraph(dpX + 16*ROUGH_SCALE, dpY, 16, 0, 16, 16, ROUGH_SCALE);
+                images.roadTile.drawGraph(dpX + 32*ROUGH_SCALE, dpY, 16, 0, 16, 16, ROUGH_SCALE);
+
+                // 縦縞
+                images.roadTile.drawGraph(dpX, dpY + 16*ROUGH_SCALE, 0, 0, 16, 16, ROUGH_SCALE);
+                images.roadTile.drawGraph(dpX, dpY + 32*ROUGH_SCALE, 0, 0, 16, 16, ROUGH_SCALE);
+
+                // レンガ
+                if (!Useful.between(x, 0, 8-2) || !Useful.between(y, 0, 5-2)) images.brick.drawGraph(dpX + 16*ROUGH_SCALE, dpY + 16*ROUGH_SCALE, 0, 0, 32, 32, ROUGH_SCALE);
+            }
+        }
+
+        // for (let x=0; x<8-1; x++)
+        // {
+        //     for (let y=0; y<5-1; y++)
+        //     {
+        //         // ブロック
+        //         let dpX = (x * 3 + 2) * 16 * ROUGH_SCALE;
+        //         let dpY = (y * 3 + 1) * 16 * ROUGH_SCALE;
+
+        //         if ((x+y+2) % 2 == 1) images.brick.drawGraph(dpX + 16*ROUGH_SCALE, dpY + 16*ROUGH_SCALE, 0, 0, 32, 32, ROUGH_SCALE);
+        //     }
+        // }
 
 
 

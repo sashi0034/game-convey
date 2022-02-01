@@ -19,7 +19,7 @@ export class Sprite
     
     private updateMethod: (hSpr: Sprite) => void = function(hSp){};
     private drawingMethod: (hSpr: Sprite, hX: number, hY: number) => void = Sprite.DrawingProcess.rough;
-
+    private destructorMethod: (hSp: Sprite) => void = function(hSp){};
 
     
     private static sprites: Sprite[];
@@ -142,6 +142,11 @@ export class Sprite
         this.drawingMethod = func;
     }
 
+    public setdestructorMethod(func: (hSpr: Sprite) => void): void
+    {
+        this.destructorMethod = func;
+    }
+
     // 消去しないようにする
     public setProtect(protect: boolean): void
     {
@@ -154,6 +159,7 @@ export class Sprite
     public static delete(spr: Sprite, isProtect: boolean = false): void
     {
         if (isProtect) return;
+        spr.destructorMethod(spr);
         Useful.remove(Sprite.sprites, this);
     }
 

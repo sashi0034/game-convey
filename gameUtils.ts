@@ -273,49 +273,48 @@ export class Input
         Input.sole.mouse.state = Input.Click.NONE;
     }
     
-    private static onMouseDown( e ) {
+    private static onMouseDown( e ) 
+    {
         Input.sole.mouse.state = e.button;
     }
     
-    private static onMouseUp( e ) {
+    private static onMouseUp( e ) 
+    {
         Input.sole.mouse.state = Input.Click.NONE;
     }
 
     
-    private static onKeyInit() {
-    for (let i=0; i<Input.sole.keyUse.length; i++)
+    private static onKeyInit() 
     {
-        Input.sole.isKeyDown[Input.sole.keyUse[i]] = false;
-    }
-}
-
-    private static onKeyDown(e) {
-    
-    for (let i=0; i<Input.sole.keyUse.length; i++)
-    {
-        let c = Input.sole.keyUse[i];
-        if (e.key === c || e.key === c.toUpperCase())
+        for (let i=0; i<Input.sole.keyUse.length; i++)
         {
-            Input.sole.isKeyDown[c] = true;
+            Input.sole.isKeyDown[Input.sole.keyUse[i]] = false;
         }
     }
-}
 
-    private static onKeyUp ( e ){
-    for (let i=0; i<Input.sole.keyUse.length; i++)
-    {
-        let c = Input.sole.keyUse[i];
-        if (e.key === c || e.key === c.toUpperCase())
+    private static onKeyDown(e) 
+    {    
+        for (let i=0; i<Input.sole.keyUse.length; i++)
         {
-            Input.sole.isKeyDown[c] = false;
+            let c = Input.sole.keyUse[i];
+            if (e.key === c || e.key === c.toUpperCase())
+            {
+                Input.sole.isKeyDown[c] = true;
+            }
         }
     }
-}
 
-
-
-
-    
+    private static onKeyUp ( e )
+    {
+        for (let i=0; i<Input.sole.keyUse.length; i++)
+        {
+            let c = Input.sole.keyUse[i];
+            if (e.key === c || e.key === c.toUpperCase())
+            {
+                Input.sole.isKeyDown[c] = false;
+            }
+        }
+    }
     
 }
 type Click = typeof Input.Click[keyof typeof Input.Click];

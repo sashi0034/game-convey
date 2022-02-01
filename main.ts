@@ -6,9 +6,11 @@ import {
     Sound,
     Input,
     Useful,
+} from "./gameUtils.js";
+import {
     Actor,
     ActorDrawingBySelf,
-} from "./gameUtils.js";
+} from "./gameEngine.js";
 
 export var context;
 export var canvas;

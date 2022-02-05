@@ -46,17 +46,17 @@ export class Actor
     protected destructor(): void {}
 }
 
-export abstract class ActorDrawingBySelf extends Actor
+export abstract class SelfDrawingActor extends Actor
 {
     constructor()
     {
         super();
-        this.spr.setDrawingMethod(ActorDrawingBySelf.callDrawing);
+        this.spr.setDrawingMethod(SelfDrawingActor.callDrawing);
     }
 
     private static callDrawing(hSpr: Sprite, hX: number, hY: number): void
     {
-        let self: ActorDrawingBySelf = hSpr.getBelong();
+        let self: SelfDrawingActor = hSpr.getBelong();
         self.drawing(hX, hY);
     }
 
@@ -64,10 +64,10 @@ export abstract class ActorDrawingBySelf extends Actor
 }
 
 
-export class ActorCollider extends Actor
+export class CollideActor extends Actor
 {
-    private static colliders: ActorCollider[] = [];
-    public static get getColliders() {return ActorCollider.colliders;}
+    private static colliders: CollideActor[] = [];
+    public static get getColliders() {return CollideActor.colliders;}
 
     protected x: number = 0;
     protected y: number = 0;
@@ -84,7 +84,7 @@ export class ActorCollider extends Actor
         super();
         this.shape = shape;
         this.mask = mask;
-        ActorCollider.colliders.push(this);
+        CollideActor.colliders.push(this);
     }
 
     protected override update(): void
@@ -93,7 +93,7 @@ export class ActorCollider extends Actor
     };
     protected override destructor(): void 
     {
-        Useful.remove(ActorCollider.colliders, this);
+        Useful.remove(CollideActor.colliders, this);
         super.destructor();
     }
 }
@@ -140,21 +140,21 @@ export namespace Hit
 
     // 正方形に接触したオブジェクトを返す
     function getHitRect(x: number, y: number, 
-        width: number, height: number, mask: number): ActorCollider
+        width: number, height: number, mask: number): CollideActor
     {
         return getHitRectFromIndex(x, y, width, height, mask, 0);        
     }
 
 
     function getHitRectFromIndex(x: number, y: number, 
-        width: number, height: number, mask: number, firstIndex: number): ActorCollider
+        width: number, height: number, mask: number, firstIndex: number): CollideActor
     {
-        let ret: ActorCollider = null;
+        let ret: CollideActor = null;
 
-        let cols: ActorCollider[] = ActorCollider.getColliders;
+        let cols: CollideActor[] = CollideActor.getColliders;
         for (let i=firstIndex; i<cols.length; i++)
         {
-            let col: ActorCollider = cols[i];
+            let col: CollideActor = cols[i];
             if ((col.getMask & mask) != 0)
             {
                 let shape = col.getShape;
@@ -182,10 +182,10 @@ export namespace Hit
     }
 
     export function getHitRectAll(x: number, y: number, 
-        width: number, height: number, mask: number): ActorCollider[]
+        width: number, height: number, mask: number): CollideActor[]
     {
-        let ret: ActorCollider[] = [];
-        for (let i=0; i<ActorCollider.getColliders.length; i++)
+        let ret: CollideActor[] = [];
+        for (let i=0; i<CollideActor.getColliders.length; i++)
         {
             let col = getHitRectFromIndex(x, y, width, height, mask, i);
             if (col==null) break;

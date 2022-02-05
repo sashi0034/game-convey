@@ -9,7 +9,8 @@ import {
 } from "./gameUtils.js";
 import {
     Actor,
-    ActorDrawingBySelf,
+    CollideActor,
+    SelfDrawingActor,
     Hit,
 } from "./gameEngine.js";
 
@@ -299,6 +300,17 @@ class Test extends Actor
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 const EAngle = 
 {
     RIGHT: 0,
@@ -514,7 +526,7 @@ class BackgraphiManager extends Actor
 
 
 // 基底フィールドレイヤー
-abstract class FieldLayerBase extends ActorDrawingBySelf
+abstract class FieldLayerBase extends SelfDrawingActor
 {
     protected gridUnit = 16;
     protected z: number;
@@ -571,7 +583,7 @@ class Floorlayer extends FieldLayerBase
 
 
 // タイルレイヤー
-class TileLayer extends ActorDrawingBySelf
+class TileLayer extends SelfDrawingActor
 {
     constructor()
     {

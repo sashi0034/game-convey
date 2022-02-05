@@ -33,7 +33,7 @@ var playerName: string="";
 var gameState: GameState = GameState.PLAYING;
 var gameScore: number=0;
 
-const KEY_USE = ['w', 'a', 's', 'd', 'Enter'];
+const KEY_USE = ['d', 'f', 'Enter'];
 
 const ROUGH_SCALE = 3;
 const ROUGH_WIDTH = 416;
@@ -132,6 +132,7 @@ class Images
     roadTile: Graph = Graphics.loadGraph("./images/roadtile_16x16.png");
     arrowTile: Graph = Graphics.loadGraph("./images/arrow_16x16.png");
     brick: Graph = Graphics.loadGraph("./images/brick_32x32.png");
+    rotateHint: Graph = Graphics.loadGraph("./images/rotate_16x16.png");
 
     punicat: Graph = Graphics.loadGraph("./images/punicat_24x24.png");
     lockonCursor: Graph = Graphics.loadGraph("./images/lockon_24x24.png");
@@ -379,28 +380,42 @@ class Arrow
 class ArrowController extends Actor
 {
     timeOnPush: number = 0;
+    cursorX: number = 0;
+    cursorY: number = 0;
+    hintSprL: Sprite = null;
+    hintSprR: Sprite = null;
 
     constructor()
     {
         super();
         this.spr.setImage(null, 0, 0, 24, 24);
         this.spr.setZ(ActorZ.CURSOR);
+
+        this.hintSprL = new Sprite(images.rotateHint, 0, 0, 16, 16);
+        this.hintSprL.setZ(ActorZ.CURSOR - 1)
+        this.hintSprR = new Sprite(images.rotateHint, 0, 0, 16, 16);
+        this.hintSprR.setZ(ActorZ.CURSOR - 1)
+        this.hintSprL.setFlip(true);
     }
 
     protected override update(): void
     {
         this.spr.setImage(null);
+        
+        [this.cursorX, this.cursorY] = input.getMouse.getXY;
+        this.cursorX /= 3; this.cursorY/= 3;
+
+
         for (let x=0; x<Conveyor.ARROW_X; x++)
         {
             for (let y=0; y<Conveyor.ARROW_Y; y++)
             {
                 let [x1, y1] = Conveyor.getArrowPos(x, y)
-                let [x2, y2] = input.getMouse.getXY;
                 let w = 8;
 
                 if (Hit.checkRectReck(
                     x1-w, y1-w, 16+w*2, 16+w*2, 
-                    x2/3, y2/3, 1, 1
+                    this.cursorX, this.cursorY, 1, 1
                 ))
                 {
                     this.rotateArrow(x, y)
@@ -410,24 +425,50 @@ class ArrowController extends Actor
                 }
             }
         }
-        
+
+        this.updateHint();
         super.update();
     }
 
     private rotateArrow(x: number, y: number)
     {   
-        if (input.getMouse.state == Input.Click.RIGHT)
+        if (this.getCanRotateR())
         {
             if (this.timeOnPush+1 != this.time) Arrow.sole.mat[x][y] += 1;
             this.timeOnPush = this.time;
         }
-        else if (input.getMouse.state == Input.Click.LEFT)
+        else if (this.getCanRotateL())
         {
             if (this.timeOnPush+1 != this.time) Arrow.sole.mat[x][y] += -1;
             this.timeOnPush = this.time;
         }
         Arrow.sole.mat[x][y] = ((Arrow.sole.mat[x][y]+4) % 4) as EAngle;
     }
+
+    private getCanRotateR()
+    {
+        return (input.getMouse.state == Input.Click.RIGHT)
+        || (input.getKeyDown['f']);
+    }
+    private getCanRotateL()
+    {
+        return (input.getMouse.state == Input.Click.LEFT)
+        || (input.getKeyDown['d']);;
+    }
+
+    private updateHint()
+    {
+        
+        this.hintSprL.setXY(this.cursorX-8-12, this.cursorY-16);
+        this.hintSprR.setXY(this.cursorX-8+12, this.cursorY-16);
+
+        this.hintSprL.SetBlendPal(128)
+        this.hintSprR.SetBlendPal(128)
+
+        if (this.getCanRotateL()) this.hintSprL.SetBlendPal(255)
+        if (this.getCanRotateR()) this.hintSprR.SetBlendPal(255)
+    }
+
 
 }
 

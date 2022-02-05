@@ -11,7 +11,7 @@ export class Sprite
     private v: number = 0;
     private width: number = 0;
     private height: number = 0;
-    private isReverse: boolean = false;
+    private isFlip: boolean = false;
     private isProtect: boolean = false;
     private link: Sprite = null;
     private blendPal: number = 1.0;
@@ -52,9 +52,9 @@ export class Sprite
     }
 
 
-    public setReverse(rev: boolean): void
+    public setFlip(rev: boolean): void
     {
-        this.isReverse = rev;
+        this.isFlip = rev;
     }
 
     
@@ -233,7 +233,7 @@ export class Sprite
         {
             if (spr.image==null) return;
 
-            if (spr.isReverse) 
+            if (spr.isFlip) 
             {
                 spr.image.drawTurnGraph(x, y, spr.u, spr.v, spr.width, spr.height, scale); 
             }

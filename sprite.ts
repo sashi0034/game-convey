@@ -65,7 +65,10 @@ export class Sprite
 
     public setImage(image?: Graph, u?: number, v?: number, w?: number, h?: number): void
     {
-        if (image!=undefined) this.image = image;
+        if (image!=undefined) 
+            {this.image = image;}
+        else
+            {this.image = null;}
 
         if (u!==undefined) this.u = u;
         if (v!==undefined) this.v = v;

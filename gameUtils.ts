@@ -330,6 +330,11 @@ class Mouse
     {
         
     }
+
+    public get getXY(): [number, number]
+    {
+        return [this.x, this.y]
+    }
 }
 
 

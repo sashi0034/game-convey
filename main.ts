@@ -10,6 +10,7 @@ import {
 import {
     Actor,
     ActorDrawingBySelf,
+    Hit,
 } from "./gameEngine.js";
 
 export var context;
@@ -133,12 +134,13 @@ class Images
     brick: Graph = Graphics.loadGraph("./images/brick_32x32.png");
 
     punicat: Graph = Graphics.loadGraph("./images/punicat_24x24.png");
-
+    lockonCursor: Graph = Graphics.loadGraph("./images/lockon_24x24.png");
 }
 
 
 const ActorZ =
 {
+    CURSOR: -1000,
     PLAYER: 0,
     BACKGRAPHIC: 2000,
 } as const;
@@ -234,7 +236,7 @@ class Main
     {
         new Test();
         new BackgraphiManager();
-
+        new ArrowController();
         
     }
 
@@ -298,6 +300,45 @@ class Test extends Actor
 
 
 
+// 矢印を動かす
+class ArrowController extends Actor
+{
+
+    constructor()
+    {
+        super();
+        this.spr.setImage(null, 0, 0, 24, 24);
+        this.spr.setZ(ActorZ.CURSOR);
+    }
+
+    protected override update(): void
+    {
+        this.spr.setImage(null);
+        for (let x=0; x<Conveyor.ARROW_X; x++)
+        {
+            for (let y=0; y<Conveyor.ARROW_Y; y++)
+            {
+                let [x1, y1] = Conveyor.getArrowPos(x, y)
+                let [x2, y2] = input.getMouse.getXY;
+                let w = 8;
+
+                if (Hit.checkRectReck(
+                    x1-w, y1-w, 16+w*2, 16+w*2, 
+                    x2/3, y2/3, 1, 1
+                ))
+                {
+                    this.spr.setXY(x1-4, y1-4);
+                    this.spr.setImage(images.lockonCursor);
+                    break;
+                }
+            }
+        }
+        
+        super.update();
+    }
+
+}
+
 
 
 
@@ -307,6 +348,14 @@ class Conveyor
     public static isArrowTile(x: number, y: number): boolean
     {
         return (x+1) % 3==0 && (y+2) % 3==0;
+    }
+
+    public static ARROW_X = 8;
+    public static ARROW_Y = 5;
+    public static getArrowPos(x: number, y: number): [number, number]
+    {
+        let ret: [number, number] = [(x * 3 + 2) * 16, (y * 3 + 1) * 16];
+        return ret;
     }
 }
 
@@ -399,20 +448,18 @@ class TileLayer extends ActorDrawingBySelf
 
     protected override drawing(hX: number, hY: number): void 
     {
-        for (let x=0; x<8; x++)
+        for (let x=0; x<Conveyor.ARROW_X; x++)
         {
-            for (let y=0; y<5; y++)
+            for (let y=0; y<Conveyor.ARROW_Y; y++)
             {
-                let dpX = (x * 3 + 2) * 16 * ROUGH_SCALE;
-                let dpY = (y * 3 + 1) * 16 * ROUGH_SCALE;
-
-                images.arrowTile.drawGraph(dpX, dpY, 0, 0, 16, 16, ROUGH_SCALE);
+                // 矢印
+                images.arrowTile.drawGraph(...Useful.xyToRough(Conveyor.getArrowPos(x, y)), 0, 0, 16, 16, ROUGH_SCALE);
             }
         }
 
-        for (let x=-1; x<8; x++)
+        for (let x=-1; x<Conveyor.ARROW_X; x++)
         {
-            for (let y=-1; y<5; y++)
+            for (let y=-1; y<Conveyor.ARROW_Y; y++)
             {
                 let dpX = (x * 3 + 2) * 16 * ROUGH_SCALE;
                 let dpY = (y * 3 + 1) * 16 * ROUGH_SCALE;

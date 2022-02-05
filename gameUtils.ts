@@ -203,6 +203,20 @@ export class Useful
         let ret = n % m;
         return ret<0 ? ret+m : ret;
     }
+
+    static initMat2<T>(width: number, height: number): T[][]
+    {
+        let arr: T[][] = new Array();
+        for (let x=0; x<width; x++) 
+        {
+            arr[x] = new Array();
+            for (let y=0; y<height; y++)
+            {
+                arr[x][y] = null;
+            }
+        }
+        return arr;
+    }
 }
 
 
@@ -216,7 +230,7 @@ export class Input
 
     private mouse: Mouse
     public get getMouse(): Mouse {return this.mouse};
-    public static readonly Click = { NONE: -1,  RIGHT: 0 } as const
+    public static readonly Click = { NONE: -1,  LEFT: 0, MIDDLE: 1, RIGHT: 2 } as const
     
     private isKeyDown: {[key: string]: boolean} = {}
     public get getKeyDown(): {[key: string]: boolean} {return this.isKeyDown}; 

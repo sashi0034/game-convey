@@ -184,7 +184,7 @@ class Title
     {
         Sprite.allUpdate();
         Sprite.allDrawing();
-        if ((input.getMouse.state==Input.Click.RIGHT && Useful.between(input.getMouse.x, 0,SCREEN_WIDTH) && Useful.between(input.getMouse.y, 0,SCREEN_HEIGHT)) ||
+        if ((input.getMouse.state==Input.Click.LEFT && Useful.between(input.getMouse.x, 0,SCREEN_WIDTH) && Useful.between(input.getMouse.y, 0,SCREEN_HEIGHT)) ||
             input.getKeyDown['Enter']) 
         {
             Sprite.deleteAll(true);
@@ -234,6 +234,7 @@ class Main
 
     static setup()
     {
+        new Arrow();
         new Test();
         new BackgraphiManager();
         new ArrowController();
@@ -268,8 +269,6 @@ class Main
                 }
         }
     }
-
-
 }
 
 
@@ -299,10 +298,87 @@ class Test extends Actor
 
 
 
+const EAngle = 
+{
+    RIGHT: 0,
+    DOWN: 1,
+    LEFT: 2,
+    UP: 3,
+} as const
+type EAngle = typeof EAngle[keyof typeof EAngle];
+
+class Angle
+{
+    static toXY(ang: EAngle): [number, number]
+    {
+        let ret: [number, number];
+        switch(ang)
+        {
+            case EAngle.UP:
+                ret = [0,-1];break;
+            case EAngle.RIGHT:
+                ret = [1, 0];break;
+            case EAngle.DOWN:
+                ret = [0, 1];break;
+            case EAngle.LEFT:
+                ret = [-1, 0];break;
+        }
+        return ret; 
+    }
+
+    static toDir(x: number, y: number): EAngle
+    {
+        // atan2の定義域は-pi~pi
+        let theta = Math.atan2(y, x);
+
+        if (Useful.between(theta, -Math.PI/4, Math.PI/4))
+        {
+            return EAngle.RIGHT;
+        }
+        else if (Useful.between(theta, -Math.PI*3/4, -Math.PI/4))
+        {
+            return EAngle.UP;
+        }
+        else if (Useful.between(theta, Math.PI/4, Math.PI*3/4))
+        {
+            return EAngle.DOWN;
+        }
+        else
+        {
+            return EAngle.LEFT;
+        }
+    }
+}
+
+
+
+// 矢印管理
+class Arrow
+{
+    static sole: Arrow = null;
+    mat: EAngle[][]
+
+    constructor()
+    {
+        Arrow.sole = this;
+
+        this.mat = Useful.initMat2<EAngle>(Conveyor.ARROW_X, Conveyor.ARROW_Y)
+
+        for (let y=0; y<Conveyor.ARROW_Y; y++)
+        {
+            for (let x=0; x<Conveyor.ARROW_X; x++)
+            {
+                this.mat[x][y] = Useful.rand(4) as EAngle;
+            }
+        }
+    }
+}
+
 
 // 矢印を動かす
 class ArrowController extends Actor
 {
+    timeOnPush: number = 0;
 
     constructor()
     {
@@ -327,6 +403,7 @@ class ArrowController extends Actor
                     x2/3, y2/3, 1, 1
                 ))
                 {
+                    this.rotateArrow(x, y)
                     this.spr.setXY(x1-4, y1-4);
                     this.spr.setImage(images.lockonCursor);
                     break;
@@ -335,6 +412,21 @@ class ArrowController extends Actor
         }
         
         super.update();
+    }
+
+    private rotateArrow(x: number, y: number)
+    {   
+        if (input.getMouse.state == Input.Click.RIGHT)
+        {
+            if (this.timeOnPush+1 != this.time) Arrow.sole.mat[x][y] += 1;
+            this.timeOnPush = this.time;
+        }
+        else if (input.getMouse.state == Input.Click.LEFT)
+        {
+            if (this.timeOnPush+1 != this.time) Arrow.sole.mat[x][y] += -1;
+            this.timeOnPush = this.time;
+        }
+        Arrow.sole.mat[x][y] = ((Arrow.sole.mat[x][y]+4) % 4) as EAngle;
     }
 
 }
@@ -453,7 +545,7 @@ class TileLayer extends ActorDrawingBySelf
             for (let y=0; y<Conveyor.ARROW_Y; y++)
             {
                 // 矢印
-                images.arrowTile.drawGraph(...Useful.xyToRough(Conveyor.getArrowPos(x, y)), 0, 0, 16, 16, ROUGH_SCALE);
+                images.arrowTile.drawGraph(...Useful.xyToRough(Conveyor.getArrowPos(x, y)), Arrow.sole.mat[x][y]*16, 0, 16, 16, ROUGH_SCALE);
             }
         }
 

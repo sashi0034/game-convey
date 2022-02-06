@@ -144,8 +144,8 @@ class Images
 
 const EActorZ =
 {
-    CURSOR: -1000,
-    PLAYER: 0,
+    CURSOR: -2000,
+    MOVABLE: 0,
     BACKGRAPHIC: 2000,
 } as const;
 type EActorZ = typeof EActorZ[keyof typeof EActorZ];
@@ -397,6 +397,7 @@ abstract class movableUnit extends CollideActor
         }
 
         this.setImage();
+        this.spr.setZ(EActorZ.MOVABLE-this.y/ROUGH_HEIGHT);
     }
     protected abstract setImage();
 }

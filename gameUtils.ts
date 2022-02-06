@@ -217,6 +217,11 @@ export class Useful
         }
         return arr;
     }
+
+    static floorDivide(n: number, range: number, devider: number): number
+    {
+        return ((n % range) / (range/devider)) | 0;
+    }
 }
 
 

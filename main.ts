@@ -316,6 +316,8 @@ class Punicat extends CollideActor
     nextMatX: number = 0;
     nextMatY: number = 0;
 
+    angle: EAngle = 0;
+
     moveTime: number = 0;
     moveTimeMax: number = 120;
 
@@ -346,7 +348,8 @@ class Punicat extends CollideActor
             this.matY = this.nextMatY; 
 
             let dx, dy;
-            [dx, dy] = Angle.toXY(Arrow.sole.mat[this.matX][this.matY]);
+            this.angle = Arrow.sole.mat[this.matX][this.matY];
+            [dx, dy] = Angle.toXY(this.angle);
             this.nextMatX = this.matX + dx;
             this.nextMatY = this.matY + dy;
             this.moveTime = 0;
@@ -359,9 +362,12 @@ class Punicat extends CollideActor
             [x2, y2] = Conveyor.getArrowPos(this.nextMatX, this.nextMatY);
             rate = this.moveTime/this.moveTimeMax;
 
-            this.x = x1 * (1-rate) + x2 * rate;
-            this.y = y1 * (1-rate) + y2 * rate;
+            this.x = x1 + (x2 - x1) * rate;
+            this.y = y1 + (y2 - y1) * rate;
         }
+        this.spr.setImage(images.punicat,
+            Useful.floorDivide(this.time, 60, 4)*24, this.angle*24, 24, 24);
+        
     }
 
 }

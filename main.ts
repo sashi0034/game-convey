@@ -310,7 +310,7 @@ class Test extends Actor
 
 
 // 矢印に沿って動くユニット
-abstract class movableUnit extends CollideActor
+abstract class MovableUnit extends CollideActor
 {
     protected matX: number = 0;
     protected matY: number = 0;
@@ -403,7 +403,7 @@ abstract class movableUnit extends CollideActor
 }
 
 // ぷにキャット
-class Punicat extends movableUnit
+class Punicat extends MovableUnit
 {
     constructor()
     {
@@ -427,8 +427,10 @@ class Punicat extends movableUnit
 }
 
 
-// バクゴンさん
-class Bakugon extends movableUnit
+
+
+// 外からやってくるユニット
+abstract class GoInsideUnit extends MovableUnit
 {
     private hasFirstGlimpsed: boolean;
     private glimpseTime: number;
@@ -446,7 +448,7 @@ class Bakugon extends movableUnit
             y = Useful.rand(2)==0 ? -1 : Conveyor.ARROW_Y
             x = Useful.rand(Conveyor.ARROW_X)
         }
-        super(x, y|0);
+        super(x, y);
 
         this.hasFirstGlimpsed = false;
         this.glimpseTime = 0;
@@ -462,15 +464,11 @@ class Bakugon extends movableUnit
         if (this.canFirstFlimpse()) this.firstGlimpse()
         this.moveArrow();
         super.update();
-        this.spr.setXY(this.x-4, this.y-8);
+        this.setXY();
         this.setImage();
     }
 
-    protected override setImage(): void
-    {
-        this.spr.setImage(images.bakugon,
-            Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, 0, 24, 24);
-    }
+    protected abstract setXY(): void;
 
     // 出てきたときにチラっとする
     private canFirstFlimpse(): boolean
@@ -488,6 +486,33 @@ class Bakugon extends movableUnit
                 this.hasFirstGlimpsed = true;
             }
         }
+    }
+}
+
+
+
+
+// バクゴンさん
+class Bakugon extends GoInsideUnit
+{
+    constructor()
+    {
+        super();
+    }
+
+    protected override update(): void 
+    {
+        super.update();
+    }
+
+    protected override setImage(): void
+    {
+        this.spr.setImage(images.bakugon,
+            Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, 0, 24, 24);
+    }
+    protected override setXY(): void 
+    {
+        this.spr.setXY(this.x-4, this.y-8);
     }
 }
 

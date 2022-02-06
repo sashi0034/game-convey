@@ -12,6 +12,7 @@ import {
     CollideActor,
     SelfDrawingActor,
     Hit,
+    Collider,
 } from "./gameEngine.js";
 
 export var context;
@@ -140,13 +141,20 @@ class Images
 }
 
 
-const ActorZ =
+const EActorZ =
 {
     CURSOR: -1000,
     PLAYER: 0,
     BACKGRAPHIC: 2000,
 } as const;
-type ActorZ = typeof ActorZ[keyof typeof ActorZ];
+type EActorZ = typeof EActorZ[keyof typeof EActorZ];
+
+
+const EActorMask = 
+{
+    CREATURE: 1,
+} as const;
+type EActorMask = typeof EActorMask[keyof typeof EActorMask];
 
 
 
@@ -237,9 +245,9 @@ class Main
     static setup()
     {
         new Arrow();
-        new Test();
         new BackgraphiManager();
         new ArrowController();
+        new Punicat();
         
     }
 
@@ -300,6 +308,63 @@ class Test extends Actor
 
 
 
+// ぷにキャット
+class Punicat extends CollideActor
+{
+    matX: number = 0;
+    matY: number = 0;
+    nextMatX: number = 0;
+    nextMatY: number = 0;
+
+    moveTime: number = 0;
+    moveTimeMax: number = 120;
+
+    constructor()
+    {
+        super(new Collider.Rectangle(0, 0, 16, 16), EActorMask.CREATURE);
+        this.spr.setImage(images.punicat, 0, 0, 24, 24);
+        this.nextMatX = Conveyor.ARROW_X/2|0;
+        this.nextMatY = Conveyor.ARROW_Y/2|0;
+        this.matX = this.nextMatX;
+        this.matY = this.nextMatY;
+        this.moveTime = this.moveTimeMax;
+    }
+
+    protected override update(): void 
+    {
+        this.moveArrow();
+        
+        super.update();
+        this.spr.setXY(this.x-4, this.y-8)
+    }
+
+    protected moveArrow()
+    {// 進路を決める
+        if (this.moveTime >= this.moveTimeMax)
+        {
+            this.matX = this.nextMatX;
+            this.matY = this.nextMatY; 
+
+            let dx, dy;
+            [dx, dy] = Angle.toXY(Arrow.sole.mat[this.matX][this.matY]);
+            this.nextMatX = this.matX + dx;
+            this.nextMatY = this.matY + dy;
+            this.moveTime = 0;
+        }
+        else
+        {// 通常移動
+            this.moveTime++;
+            let x1,y1, x2, y2, rate;
+            [x1, y1] = Conveyor.getArrowPos(this.matX, this.matY);
+            [x2, y2] = Conveyor.getArrowPos(this.nextMatX, this.nextMatY);
+            rate = this.moveTime/this.moveTimeMax;
+
+            this.x = x1 * (1-rate) + x2 * rate;
+            this.y = y1 * (1-rate) + y2 * rate;
+        }
+    }
+
+}
 
 
 
@@ -401,12 +466,12 @@ class ArrowController extends Actor
     {
         super();
         this.spr.setImage(null, 0, 0, 24, 24);
-        this.spr.setZ(ActorZ.CURSOR);
+        this.spr.setZ(EActorZ.CURSOR);
 
         this.hintSprL = new Sprite(images.rotateHint, 0, 0, 16, 16);
-        this.hintSprL.setZ(ActorZ.CURSOR - 1)
+        this.hintSprL.setZ(EActorZ.CURSOR - 1)
         this.hintSprR = new Sprite(images.rotateHint, 0, 0, 16, 16);
-        this.hintSprR.setZ(ActorZ.CURSOR - 1)
+        this.hintSprR.setZ(EActorZ.CURSOR - 1)
         this.hintSprL.setFlip(true);
     }
 
@@ -572,7 +637,7 @@ class Floorlayer extends FieldLayerBase
 {
     constructor()
     {
-        super(ActorZ.BACKGRAPHIC);
+        super(EActorZ.BACKGRAPHIC);
     }
 
     protected override chipDrawing(matX: number, matY: number, dpX: number, dpY: number): void
@@ -588,7 +653,7 @@ class TileLayer extends SelfDrawingActor
     constructor()
     {
         super();
-        this.spr.setZ(ActorZ.BACKGRAPHIC-1);
+        this.spr.setZ(EActorZ.BACKGRAPHIC-1);
     }
 
     protected override drawing(hX: number, hY: number): void 

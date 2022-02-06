@@ -89,6 +89,7 @@ export class CollideActor extends Actor
 
     protected override update(): void
     {
+        this.spr.setXY(this.x, this.y);
         super.update();
     };
     protected override destructor(): void 

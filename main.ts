@@ -137,6 +137,7 @@ class Images
     rotateHint: Graph = Graphics.loadGraph("./images/rotate_16x16.png");
 
     punicat: Graph = Graphics.loadGraph("./images/punicat_24x24.png");
+    bakugon: Graph = Graphics.loadGraph("./images/bakugon_bomb_24x24.png");
     lockonCursor: Graph = Graphics.loadGraph("./images/lockon_24x24.png");
 }
 
@@ -248,7 +249,7 @@ class Main
         new BackgraphiManager();
         new ArrowController();
         new Punicat();
-        
+        new MonsterManager();
     }
 
     static loop() 
@@ -331,13 +332,6 @@ abstract class movableUnit extends CollideActor
         this.nextMatY = this.nextMatY;
     }
 
-    protected override update(): void 
-    {
-        this.moveArrow();
-        
-        super.update();
-        this.spr.setXY(this.x-4, this.y-8)
-    }
 
     protected moveArrow()
     {// 進路を決める
@@ -347,7 +341,27 @@ abstract class movableUnit extends CollideActor
             this.matY = this.nextMatY; 
 
             let dx, dy;
-            this.angle = Arrow.sole.mat[this.matX][this.matY];
+            if (this.matX==-1)
+            {
+                this.angle = EAngle.RIGHT;         
+            }
+            else if (this.matY==-1)
+            {
+                this.angle = EAngle.DOWN;
+            }
+            else if (this.matX==Conveyor.ARROW_X)
+            {
+                this.angle = EAngle.LEFT;
+            }
+            else if (this.matY==Conveyor.ARROW_Y)
+            {
+                this.angle = EAngle.UP;
+            }
+            else
+            {
+                this.angle = Arrow.sole.mat[this.matX][this.matY];
+            }
+
             [dx, dy] = Angle.toXY(this.angle);
             this.nextMatX = this.matX + dx;
             this.nextMatY = this.matY + dy;
@@ -376,20 +390,76 @@ class Punicat extends movableUnit
     constructor()
     {
         super(Conveyor.ARROW_X/2|0, Conveyor.ARROW_Y/2|0);
-        this.spr.setImage(images.punicat, 0, 0, 24, 24);        
+        this.spr.setImage(images.punicat, 0, 0, 24, 24);
     }
 
-    protected setImage() 
+    protected override update(): void 
+    {
+        this.moveArrow();
+        super.update();
+        this.spr.setXY(this.x-4, this.y-8);
+    }
+
+    protected override setImage() 
     {
         this.spr.setImage(images.punicat,
         Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, this.angle*24, 24, 24);
     }
 
-
 }
 
 
+// バクゴンさん
+class Bakugon extends movableUnit
+{
+    constructor()
+    {
+        let x, y;
+        if (Useful.rand(2)==0)
+        {
+            x = Useful.rand(2)==0 ? -1 : Conveyor.ARROW_X
+            y = Useful.rand(Conveyor.ARROW_Y)
+        }
+        else
+        {
+            y = Useful.rand(2)==0 ? -1 : Conveyor.ARROW_Y
+            x = Useful.rand(Conveyor.ARROW_X)
+        }
 
+        super(x, y|0);
+        this.spr.setImage(images.bakugon, 0, 0, 24, 24);        
+    }
+
+    protected override update(): void 
+    {
+        this.moveArrow();
+        super.update();
+        this.spr.setXY(this.x-4, this.y-8);
+    }
+
+    protected override setImage() 
+    {
+        this.spr.setImage(images.bakugon,
+        Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, 0, 24, 24);
+    }
+}
+
+class MonsterManager extends Actor
+{
+    constructor()
+    {
+        super();
+    }
+    protected override update(): void 
+    {
+        if (this.time%60==0)
+        {
+            new Bakugon();
+        }
+
+        super.update();    
+    }
+}
 
 
 

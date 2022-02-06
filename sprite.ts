@@ -163,7 +163,7 @@ export class Sprite
     {
         if (isProtect) return;
         spr.destructorMethod(spr);
-        Useful.remove(Sprite.sprites, this);
+        Useful.remove(Sprite.sprites, spr);
     }
 
     public static deleteAll(isProtect: boolean=false)

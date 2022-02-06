@@ -249,7 +249,7 @@ class Main
         new BackgraphiManager();
         new ArrowController();
         new Punicat();
-        new MonsterManager();
+        new PopManager();
     }
 
     static loop() 
@@ -312,15 +312,19 @@ class Test extends Actor
 // 矢印に沿って動くユニット
 abstract class movableUnit extends CollideActor
 {
-    matX: number = 0;
-    matY: number = 0;
-    nextMatX: number = 0;
-    nextMatY: number = 0;
+    protected matX: number = 0;
+    protected matY: number = 0;
+    protected nextMatX: number = 0;
+    protected nextMatY: number = 0;
 
-    angle: EAngle = 0;
+    protected angle: EAngle = 0;
 
-    moveTime: number = 0;
-    moveTimeMax: number = 120;
+    protected moveTime: number = 0;
+    protected moveTimeMax: number = 120;
+
+    private isFirstMove: boolean = false;
+    private isOutScreen: boolean = false;
+    public get getIsOutScreen(): boolean {return this.isOutScreen;}
 
     constructor(startX: number, startY: number)
     {
@@ -330,6 +334,7 @@ abstract class movableUnit extends CollideActor
         this.nextMatY = startY;
         this.nextMatX = this.nextMatX;
         this.nextMatY = this.nextMatY;
+        this.isFirstMove = true;
     }
 
 
@@ -343,29 +348,41 @@ abstract class movableUnit extends CollideActor
             let dx, dy;
             if (this.matX==-1)
             {
-                this.angle = EAngle.RIGHT;         
+                this.angle = EAngle.RIGHT;
+                this.isOutScreen = true;
             }
             else if (this.matY==-1)
             {
                 this.angle = EAngle.DOWN;
+                this.isOutScreen = true;
             }
             else if (this.matX==Conveyor.ARROW_X)
             {
                 this.angle = EAngle.LEFT;
+                this.isOutScreen = true;
             }
             else if (this.matY==Conveyor.ARROW_Y)
             {
                 this.angle = EAngle.UP;
+                this.isOutScreen = true;
             }
             else
             {
                 this.angle = Arrow.sole.mat[this.matX][this.matY];
             }
 
+            if (this.isFirstMove)
+            {// 最初の動きならフラグ落とす
+                this.isFirstMove = false;
+                this.isOutScreen = false;
+            }
+
             [dx, dy] = Angle.toXY(this.angle);
             this.nextMatX = this.matX + dx;
             this.nextMatY = this.matY + dy;
             this.moveTime = 0;
+
+            [this.x, this.y] = Conveyor.getArrowPos(this.matX, this.matY);
         }
         else
         {// 通常移動
@@ -390,7 +407,6 @@ class Punicat extends movableUnit
     constructor()
     {
         super(Conveyor.ARROW_X/2|0, Conveyor.ARROW_Y/2|0);
-        this.spr.setImage(images.punicat, 0, 0, 24, 24);
     }
 
     protected override update(): void 
@@ -426,12 +442,16 @@ class Bakugon extends movableUnit
             x = Useful.rand(Conveyor.ARROW_X)
         }
 
-        super(x, y|0);
-        this.spr.setImage(images.bakugon, 0, 0, 24, 24);        
+        super(x, y|0);      
     }
 
     protected override update(): void 
     {
+        if (this.getIsOutScreen) 
+        {// 外に出た
+            Sprite.delete(this.spr);
+            return;
+        }
         this.moveArrow();
         super.update();
         this.spr.setXY(this.x-4, this.y-8);
@@ -440,11 +460,13 @@ class Bakugon extends movableUnit
     protected override setImage() 
     {
         this.spr.setImage(images.bakugon,
-        Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, 0, 24, 24);
+            Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, 0, 24, 24);
     }
 }
 
-class MonsterManager extends Actor
+
+// 湧き出すものたちの管理者
+class PopManager extends Actor
 {
     constructor()
     {

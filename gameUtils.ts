@@ -192,13 +192,18 @@ export class Useful
         }
     }
 
-    static remove(arr: Array<any>, target: any)
+    static remove(arr: Array<any>, target: any): boolean
     {
         let i=arr.indexOf(target);
-        if (i>-1) arr.splice(i, 1);
+        if (i>-1) 
+        {
+            arr.splice(i, 1);
+            return true;
+        }
+        return false;
     }
 
-    static mod(n: number, m: number)
+    static mod(n: number, m: number): number
     {
         let ret = n % m;
         return ret<0 ? ret+m : ret;

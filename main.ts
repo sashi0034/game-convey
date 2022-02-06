@@ -324,6 +324,7 @@ abstract class movableUnit extends CollideActor
 
     private isFirstMove: boolean = false;
     private isOutScreen: boolean = false;
+    public get getIsFirstMove(): boolean {return this.isFirstMove;}
     public get getIsOutScreen(): boolean {return this.isOutScreen;}
 
     constructor(startX: number, startY: number)
@@ -396,7 +397,6 @@ abstract class movableUnit extends CollideActor
             this.y = y1 + (y2 - y1) * rate;
         }
 
-        this.setImage();
         this.spr.setZ(EActorZ.MOVABLE-this.y/ROUGH_HEIGHT);
     }
     protected abstract setImage();
@@ -415,6 +415,7 @@ class Punicat extends movableUnit
         this.moveArrow();
         super.update();
         this.spr.setXY(this.x-4, this.y-8);
+        this.setImage();
     }
 
     protected override setImage() 
@@ -429,6 +430,9 @@ class Punicat extends movableUnit
 // バクゴンさん
 class Bakugon extends movableUnit
 {
+    private hasFirstGlimpsed: boolean;
+    private glimpseTime: number;
+
     constructor()
     {
         let x, y;
@@ -442,8 +446,10 @@ class Bakugon extends movableUnit
             y = Useful.rand(2)==0 ? -1 : Conveyor.ARROW_Y
             x = Useful.rand(Conveyor.ARROW_X)
         }
+        super(x, y|0);
 
-        super(x, y|0);      
+        this.hasFirstGlimpsed = false;
+        this.glimpseTime = 0;
     }
 
     protected override update(): void 
@@ -453,15 +459,35 @@ class Bakugon extends movableUnit
             Sprite.delete(this.spr);
             return;
         }
+        if (this.canFirstFlimpse()) this.firstGlimpse()
         this.moveArrow();
         super.update();
         this.spr.setXY(this.x-4, this.y-8);
+        this.setImage();
     }
 
-    protected override setImage() 
+    protected override setImage(): void
     {
         this.spr.setImage(images.bakugon,
             Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, 0, 24, 24);
+    }
+
+    // 出てきたときにチラっとする
+    private canFirstFlimpse(): boolean
+    {
+        return !this.hasFirstGlimpsed && !this.getIsFirstMove
+    }
+    private firstGlimpse(): void
+    {
+        if (this.moveTime>this.moveTimeMax/2 || this.glimpseTime>0)
+        {
+            this.moveTime -= 1.3;
+            this.glimpseTime++;
+            if (this.glimpseTime>15)
+            {
+                this.hasFirstGlimpsed = true;
+            }
+        }
     }
 }
 

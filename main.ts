@@ -308,8 +308,8 @@ class Test extends Actor
 
 
 
-// ぷにキャット
-class Punicat extends CollideActor
+// 矢印に沿って動くユニット
+abstract class movableUnit extends CollideActor
 {
     matX: number = 0;
     matY: number = 0;
@@ -321,15 +321,14 @@ class Punicat extends CollideActor
     moveTime: number = 0;
     moveTimeMax: number = 120;
 
-    constructor()
+    constructor(startX: number, startY: number)
     {
         super(new Collider.Rectangle(0, 0, 16, 16), EActorMask.CREATURE);
-        this.spr.setImage(images.punicat, 0, 0, 24, 24);
-        this.nextMatX = Conveyor.ARROW_X/2|0;
-        this.nextMatY = Conveyor.ARROW_Y/2|0;
-        this.matX = this.nextMatX;
-        this.matY = this.nextMatY;
         this.moveTime = this.moveTimeMax;
+        this.nextMatX = startX;
+        this.nextMatY = startY;
+        this.nextMatX = this.nextMatX;
+        this.nextMatY = this.nextMatY;
     }
 
     protected override update(): void 
@@ -365,10 +364,27 @@ class Punicat extends CollideActor
             this.x = x1 + (x2 - x1) * rate;
             this.y = y1 + (y2 - y1) * rate;
         }
-        this.spr.setImage(images.punicat,
-            Useful.floorDivide(this.time, 60, 4)*24, this.angle*24, 24, 24);
-        
+
+        this.setImage();
     }
+    protected abstract setImage();
+}
+
+// ぷにキャット
+class Punicat extends movableUnit
+{
+    constructor()
+    {
+        super(Conveyor.ARROW_X/2|0, Conveyor.ARROW_Y/2|0);
+        this.spr.setImage(images.punicat, 0, 0, 24, 24);        
+    }
+
+    protected setImage() 
+    {
+        this.spr.setImage(images.punicat,
+        Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, this.angle*24, 24, 24);
+    }
+
 
 }
 

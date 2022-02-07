@@ -180,9 +180,17 @@ export class Sprite
 
     static allUpdate(): void
     {
-        for(let i=0; i<this.sprites.length; i++)
+        let sprs: Sprite[] = [];
+        for (let i=0; i<this.sprites.length; i++)
         {
-            this.sprites[i].updateMethod(this.sprites[i]);
+            sprs.push(this.sprites[i])
+        }
+        for(let i=0; i<sprs.length; i++)
+        {
+            if (sprs[i]!=null)
+            {
+                sprs[i].updateMethod(sprs[i]);
+            }
         }
     }
 

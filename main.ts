@@ -161,12 +161,12 @@ const EActorZ =
 type EActorZ = typeof EActorZ[keyof typeof EActorZ];
 
 
-const EActorMask = 
+const EActorColbit = 
 {
     CREATURE: 1 << 0,
     BAMBOO: 1 << 1,
 } as const;
-type EActorMask = typeof EActorMask[keyof typeof EActorMask];
+type EActorColbit = typeof EActorColbit[keyof typeof EActorColbit];
 
 
 
@@ -343,7 +343,7 @@ abstract class MovableUnit extends CollideActor
 
     constructor(startX: number, startY: number)
     {
-        super(new Collider.Rectangle(0, 0, 16, 16), EActorMask.CREATURE);
+        super(new Collider.Rectangle(0, 0, 16, 16), EActorColbit.CREATURE);
         this.moveTime = this.moveTimeMax;
         this.nextMatX = startX;
         this.nextMatY = startY;
@@ -676,7 +676,7 @@ class Bamboo extends CollideActor
 
     constructor()
     {
-        super(new Collider.Rectangle(0, 0, 16, 16), EActorMask.BAMBOO);
+        super(new Collider.Rectangle(0, 0, 16, 16), EActorColbit.BAMBOO);
 
         // 隣同士矢印2地点をランダムにとってその間の座標とする
         let x1, y1, x2, y2

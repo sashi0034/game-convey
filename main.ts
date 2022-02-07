@@ -139,6 +139,7 @@ class Images
 
     punicat: Graph = Graphics.loadGraph("./images/punicat_24x24.png");
     bakugon: Graph = Graphics.loadGraph("./images/bakugon_bomb_24x24.png");
+    gorilla: Graph = Graphics.loadGraph("./images/gorilla_24x24.png");
     bakugonSpark: Graph = Graphics.loadGraph("./images/bakugonspark_24x24.png");
     explodeBox: Graph = Graphics.loadGraph("./images/explode_box_16x16.png");
 
@@ -344,8 +345,8 @@ abstract class MovableUnit extends CollideActor
         this.moveTime = this.moveTimeMax;
         this.nextMatX = startX;
         this.nextMatY = startY;
-        this.nextMatX = this.nextMatX;
-        this.nextMatY = this.nextMatY;
+        this.matX = this.nextMatX;
+        this.matY = this.nextMatY;
         this.isFirstMove = true;
     }
 
@@ -437,6 +438,33 @@ class Punicat extends MovableUnit
 
 }
 
+
+// ゴリラ
+class Gorilla extends MovableUnit
+{
+    // 点と点の間からスタート
+    constructor(startPoint: [number, number], nextPoint: [number, number])
+    {
+        super(...startPoint);
+        [this.nextMatX, this.nextMatY] = nextPoint;
+        this.moveTime = this.moveTimeMax/2|0;
+    }
+
+    protected override update(): void 
+    {
+        this.moveArrow();
+        super.update();
+        this.spr.setXY(this.x-4, this.y-8);
+        this.setImage();
+    }
+
+    protected override setImage() 
+    {
+        this.spr.setImage(images.gorilla,
+        Useful.floorDivide(this.time, this.moveTimeMax/2|0, 2)*24, 0, 24, 24);
+    }
+
+}
 
 
 
@@ -608,6 +636,8 @@ class Mush extends GoInsideUnit
 class Bamboo extends CollideActor
 {
     private lifespan: number = 60 * 10;
+    private point1: [number, number];
+    private point2: [number, number];
 
     constructor()
     {
@@ -627,6 +657,8 @@ class Bamboo extends CollideActor
                 this.y = (Conveyor.getArrowPos(x1, y1)[1] + Conveyor.getArrowPos(x2, y2)[1])/2;
                 if (this.getHit()===null)
                 {// その場所にないならオッケー
+                    this.point1 = [x1, y1];
+                    this.point2 = [x2, y2];
                     break;
                 }
             }
@@ -635,7 +667,8 @@ class Bamboo extends CollideActor
     protected override update(): void 
     {
         if (this.time>this.lifespan)
-        {// 消す
+        {// ゴリラ出して消す
+            new Gorilla(this.point1, this.point2);
             Sprite.delete(this.spr);
             return;
         }

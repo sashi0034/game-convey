@@ -328,6 +328,8 @@ abstract class MovableUnit extends CollideActor
     protected matY: number = 0;
     protected nextMatX: number = 0;
     protected nextMatY: number = 0;
+    public get getMatX() {return this.matX;}
+    public get getMatY() {return this.matY;}
 
     protected angle: EAngle = 0;
 
@@ -359,30 +361,7 @@ abstract class MovableUnit extends CollideActor
             this.matY = this.nextMatY; 
 
             let dx, dy;
-            if (this.matX===-1)
-            {
-                this.angle = EAngle.RIGHT;
-                this.isOutScreen = true;
-            }
-            else if (this.matY===-1)
-            {
-                this.angle = EAngle.DOWN;
-                this.isOutScreen = true;
-            }
-            else if (this.matX===Conveyor.ARROW_X)
-            {
-                this.angle = EAngle.LEFT;
-                this.isOutScreen = true;
-            }
-            else if (this.matY===Conveyor.ARROW_Y)
-            {
-                this.angle = EAngle.UP;
-                this.isOutScreen = true;
-            }
-            else
-            {
-                this.angle = Arrow.sole.mat[this.matX][this.matY];
-            }
+            this.onDetermineAng();
 
             if (this.isFirstMove)
             {// 最初の動きならフラグ落とす
@@ -412,14 +391,45 @@ abstract class MovableUnit extends CollideActor
         this.spr.setZ(EActorZ.MOVABLE-this.y/ROUGH_HEIGHT);
     }
     protected abstract setImage();
+
+    protected onDetermineAng(): void
+    {
+        if (this.matX===-1)
+        {
+            this.angle = EAngle.RIGHT;
+            this.isOutScreen = true;
+        }
+        else if (this.matY===-1)
+        {
+            this.angle = EAngle.DOWN;
+            this.isOutScreen = true;
+        }
+        else if (this.matX===Conveyor.ARROW_X)
+        {
+            this.angle = EAngle.LEFT;
+            this.isOutScreen = true;
+        }
+        else if (this.matY===Conveyor.ARROW_Y)
+        {
+            this.angle = EAngle.UP;
+            this.isOutScreen = true;
+        }
+        else
+        {
+            this.angle = Arrow.sole.mat[this.matX][this.matY];
+        }
+    }
 }
 
 // ぷにキャット
 class Punicat extends MovableUnit
 {
+    static sole: Punicat = null;
+    
     constructor()
     {
         super(Conveyor.ARROW_X/2|0, Conveyor.ARROW_Y/2|0);
+        Punicat.sole = this;
     }
 
     protected override update(): void 
@@ -433,7 +443,13 @@ class Punicat extends MovableUnit
     protected override setImage() 
     {
         this.spr.setImage(images.punicat,
-        Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, this.angle*24, 24, 24);
+        Useful.floorDivide(this.time, this.moveTimeMax/4|0, 4)*24, this.angle*24, 24, 24);
+    }
+
+    protected override destructor(): void 
+    {
+        super.destructor();
+        Punicat.sole = null;    
     }
 
 }
@@ -447,6 +463,7 @@ class Gorilla extends MovableUnit
     {
         super(...startPoint);
         [this.nextMatX, this.nextMatY] = nextPoint;
+        this.moveTimeMax *= 5;
         this.moveTime = this.moveTimeMax/2|0;
     }
 
@@ -461,7 +478,25 @@ class Gorilla extends MovableUnit
     protected override setImage() 
     {
         this.spr.setImage(images.gorilla,
-        Useful.floorDivide(this.time, this.moveTimeMax/2|0, 2)*24, 0, 24, 24);
+        Useful.floorDivide(this.time, 40, 2)*24, 0, 24, 24);
+    }
+
+    // プレイヤーに近づいていくようにする
+    protected override onDetermineAng(): void 
+    {
+        let dx: number=0, dy: number=0;
+        if (this.matX<Punicat.sole.getMatX) dx = 1;
+        if (this.matX>Punicat.sole.getMatX) dx = -1;
+        if (this.matY<Punicat.sole.getMatY) dy = 1;
+        if (this.matY>Punicat.sole.getMatY) dy = -1;
+        if (dx!==0 && dy!==0)
+        {
+            if (Useful.rand(2)===0) dx = 0; else dy = 0;
+        }
+        this.angle = Angle.toAng(dx, dy);
+
+        // 進行方向に矢印を書き換え
+        Arrow.sole.mat[this.matX][this.matY] = this.angle;
     }
 
 }
@@ -516,7 +551,7 @@ abstract class GoInsideUnit extends MovableUnit
     }
     private firstGlimpse(): void
     {
-        if (this.moveTime>this.moveTimeMax/2 || this.glimpseTime>0)
+        if (this.moveTime>this.moveTimeMax/4 || this.glimpseTime>0)
         {
             this.moveTime -= 1.3;
             this.glimpseTime++;
@@ -579,7 +614,7 @@ class Bakugon extends GoInsideUnit
     {
         if (this.time>this.explodeTime)
         {// 爆発
-            new Effect.Explode.Generator(this.x, this.y);
+            new Effect.Explode.Generator(this.x+8, this.y+8);
             Sprite.delete(this.spr);
             Sprite.delete(this.sparkSpr);
             return true;
@@ -614,7 +649,7 @@ class Mush extends GoInsideUnit
     protected override setImage(): void
     {
         this.spr.setImage(images.mush,
-            Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, 0, 24, 16);
+            Useful.floorDivide(this.time, this.moveTimeMax/4|0, 4)*24, 0, 24, 16);
         
         if (this.time>this.lifespan-180)
         {
@@ -715,8 +750,10 @@ class PopManager extends Actor
 }
 
 
-
-// エフェクト
+/*
+    エフェクト
+    基準点は出来るだけエフェクトの中心にとる
+*/
 namespace Effect
 {
     class Base extends Actor
@@ -731,7 +768,7 @@ namespace Effect
     // 爆破
     export class Explode extends Base
     {
-        constructor(private x: number, private y: number)
+        private constructor(private x: number, private y: number)
         {
             super();
         }
@@ -752,9 +789,10 @@ namespace Effect
 
         public static Generator = class Generator extends Actor
         {
-            constructor(private x: number, private y: number)
+            public constructor(private x: number, private y: number)
             {
                 super();
+                this.x -= 8; this.y -= 8;
             }
             protected override update(): void 
             {
@@ -826,7 +864,7 @@ class Angle
         return ret; 
     }
 
-    static toDir(x: number, y: number): EAngle
+    static toAng(x: number, y: number): EAngle
     {
         // atan2の定義域は-pi~pi
         let theta = Math.atan2(y, x);

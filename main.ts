@@ -560,7 +560,7 @@ class Bakugon extends GoInsideUnit
 }
 
 
-// きのこ
+// 松茸
 class Mush extends GoInsideUnit
 {
     private lifespan = 60 * 30;
@@ -603,6 +603,54 @@ class Mush extends GoInsideUnit
 
 }
 
+// タケノコ
+class Bamboo extends CollideActor
+{
+    private lifespan: number = 60 * 10;
+
+    constructor()
+    {
+        super(new Collider.Rectangle(0, 0, 16, 16), EActorMask.CREATURE);
+
+        // 隣同士矢印2地点をランダムにとってその間の座標とする
+        let x1, y1, x2, y2
+        while (true)
+        {
+            x1 = Useful.rand(Conveyor.ARROW_X); 
+            y1 = Useful.rand(Conveyor.ARROW_Y);
+            x2 = Useful.rand(Conveyor.ARROW_X);
+            y2 = Useful.rand(Conveyor.ARROW_Y);
+            if (x1==x2 && Math.abs(y1-y2)==1 || y1==y2 && Math.abs(x1-x2)==1)
+            {
+                break;
+            }
+        }
+        this.x = (Conveyor.getArrowPos(x1, y1)[0] + Conveyor.getArrowPos(x2, y2)[0])/2;
+        this.y = (Conveyor.getArrowPos(x1, y1)[1] + Conveyor.getArrowPos(x2, y2)[1])/2;
+    }
+    protected override update(): void 
+    {
+        if (this.time>this.lifespan)
+        {// 消す
+            Sprite.delete(this.spr);
+            return;
+        }
+        if (this.time<40)
+        {// 最初だけ成長アニメ
+            this.spr.setImage(images.bamboo, 
+                Useful.floorDivide(this.time, 40, 4)*16, 0, 16, 16);
+        }
+        if (this.time > this.lifespan-180)
+        {// 消える前にちらちらする
+            this.spr.setImage(this.time%10<5 ? null : images.bamboo)
+        }
+        super.update();
+        this.spr.setXY(this.x, this.y - 4)
+    }
+}
+
+
+
 
 // 湧き出すものたちの管理者
 class PopManager extends Actor
@@ -620,6 +668,10 @@ class PopManager extends Actor
         if (this.time%180==0)
         {
             new Mush();
+        }
+        if (this.time%120==0)
+        {
+            new Bamboo();
         }
         super.update();    
     }
@@ -893,8 +945,9 @@ class Conveyor
         return (x+1) % 3==0 && (y+2) % 3==0;
     }
 
-    public static ARROW_X = 8;
-    public static ARROW_Y = 5;
+    public static readonly ARROW_X = 8;
+    public static readonly ARROW_Y = 5;
+    public static readonly ARROW_DISTANCE = 16 * 2;
     public static getArrowPos(x: number, y: number): [number, number]
     {
         let ret: [number, number] = [(x * 3 + 2) * 16, (y * 3 + 1) * 16];

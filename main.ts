@@ -162,7 +162,8 @@ type EActorZ = typeof EActorZ[keyof typeof EActorZ];
 
 const EActorMask = 
 {
-    CREATURE: 1,
+    CREATURE: 1 << 0,
+    BAMBOO: 1 << 1,
 } as const;
 type EActorMask = typeof EActorMask[keyof typeof EActorMask];
 
@@ -610,7 +611,7 @@ class Bamboo extends CollideActor
 
     constructor()
     {
-        super(new Collider.Rectangle(0, 0, 16, 16), EActorMask.CREATURE);
+        super(new Collider.Rectangle(0, 0, 16, 16), EActorMask.BAMBOO);
 
         // 隣同士矢印2地点をランダムにとってその間の座標とする
         let x1, y1, x2, y2
@@ -622,11 +623,14 @@ class Bamboo extends CollideActor
             y2 = Useful.rand(Conveyor.ARROW_Y);
             if (x1==x2 && Math.abs(y1-y2)==1 || y1==y2 && Math.abs(x1-x2)==1)
             {
-                break;
+                this.x = (Conveyor.getArrowPos(x1, y1)[0] + Conveyor.getArrowPos(x2, y2)[0])/2;
+                this.y = (Conveyor.getArrowPos(x1, y1)[1] + Conveyor.getArrowPos(x2, y2)[1])/2;
+                if (this.getHit()==null)
+                {// その場所にないならオッケー
+                    break;
+                }
             }
         }
-        this.x = (Conveyor.getArrowPos(x1, y1)[0] + Conveyor.getArrowPos(x2, y2)[0])/2;
-        this.y = (Conveyor.getArrowPos(x1, y1)[1] + Conveyor.getArrowPos(x2, y2)[1])/2;
     }
     protected override update(): void 
     {

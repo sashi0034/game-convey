@@ -97,6 +97,11 @@ export class CollideActor extends Actor
         Useful.remove(CollideActor.colliders, this);
         super.destructor();
     }
+
+    public getHit(): CollideActor
+    {
+        return Hit.getHitCollideActor(this);
+    }
 }
 
 
@@ -140,17 +145,21 @@ export namespace Hit
     }
 
     // 正方形に接触したオブジェクトを返す
-    function getHitRect(x: number, y: number, 
+    export function getHitRect(x: number, y: number, 
+        width: number, height: number, mask: number): CollideActor      
+    
+    export function getHitRect(x: number, y: number, 
         width: number, height: number, mask: number): CollideActor
     {
-        return getHitRectFromIndex(x, y, width, height, mask, 0);        
+        return getHitRectFromIndex(x, y, width, height, mask, 0)[0];        
     }
 
 
     function getHitRectFromIndex(x: number, y: number, 
-        width: number, height: number, mask: number, firstIndex: number): CollideActor
+        width: number, height: number, mask: number, firstIndex: number): [CollideActor, number]
     {
         let ret: CollideActor = null;
+        let retI: number = -1;
 
         let cols: CollideActor[] = CollideActor.getColliders;
         for (let i=firstIndex; i<cols.length; i++)
@@ -168,17 +177,21 @@ export namespace Hit
                         if (checkRectReck(col.getX + rect.colliderX, col.getY + rect.colliderY, rect.colliderWidth, rect.colliderHeight,
                             x, y, width, height))
                         {
-                            ret = col;        
+                            ret = col;
                         }
                         break;
                     }
                     default:
                         break;
                 }
-                if (ret != null) break;
+                if (ret != null) 
+                {   
+                    retI = i
+                    break;
+                }
             }
         }
-        return ret;
+        return [ret, retI];
 
     }
 
@@ -186,11 +199,44 @@ export namespace Hit
         width: number, height: number, mask: number): CollideActor[]
     {
         let ret: CollideActor[] = [];
-        for (let i=0; i<CollideActor.getColliders.length; i++)
+        let i: number=0;
+        while (true)
         {
-            let col = getHitRectFromIndex(x, y, width, height, mask, i);
+            let col
+            [col, i] = getHitRectFromIndex(x, y, width, height, mask, i);
             if (col==null) break;
             ret.push(col);
+            i = i + 1;
+        }
+        return ret;
+    }
+
+    export function getHitCollideActor(actor: CollideActor)
+    {
+        let ret: CollideActor = null;
+        
+        let i=0;
+        while (true)
+        {
+            let col: CollideActor = null;
+            switch (actor.getShape.type)
+            {
+                case Collider.EType.Rectangle:
+                {
+                    let rect = actor.getShape as Collider.Rectangle;
+                    [col, i] = getHitRectFromIndex(
+                        actor.getX + rect.colliderX , actor.getY + rect.colliderY, 
+                        rect.colliderWidth, rect.colliderHeight, actor.getMask, i);
+                    break;
+                }
+            }
+            if (col == actor) 
+            {
+                i = i + 1;
+                continue;
+            }
+            ret = col;
+            break;
         }
         return ret;
     }

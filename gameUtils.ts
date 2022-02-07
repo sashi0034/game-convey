@@ -157,7 +157,7 @@ export class Useful
         return (min<=n && n <= max);
     }
     static isString(obj) {
-        return typeof (obj) == "string" || obj instanceof String;
+        return typeof (obj) === "string" || obj instanceof String;
     };
 
     static toInt(n: number): number
@@ -248,7 +248,7 @@ export class Input
 
     public constructor(keyUse: string[])
     {
-        if (Input.sole != null) console.error("Input instance has already exist.");
+        if (Input.sole !== null) console.error("Input instance has already exist.");
         Input.sole = this;
 
         this.mouse = new Mouse;

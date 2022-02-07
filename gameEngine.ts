@@ -165,7 +165,7 @@ export namespace Hit
         for (let i=firstIndex; i<cols.length; i++)
         {
             let col: CollideActor = cols[i];
-            if ((col.getMask & mask) != 0)
+            if ((col.getMask & mask) !== 0)
             {
                 let shape = col.getShape;
 
@@ -184,7 +184,7 @@ export namespace Hit
                     default:
                         break;
                 }
-                if (ret != null) 
+                if (ret !== null) 
                 {   
                     retI = i
                     break;
@@ -204,7 +204,7 @@ export namespace Hit
         {
             let col
             [col, i] = getHitRectFromIndex(x, y, width, height, mask, i);
-            if (col==null) break;
+            if (col===null) break;
             ret.push(col);
             i = i + 1;
         }
@@ -230,7 +230,7 @@ export namespace Hit
                     break;
                 }
             }
-            if (col == actor) 
+            if (col === actor) 
             {
                 i = i + 1;
                 continue;

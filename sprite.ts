@@ -41,7 +41,7 @@ export class Sprite
         {
             this.image = image;
         }
-        if (u != undefined && v != undefined && w != undefined && h != undefined)
+        if (u !== undefined && v !== undefined && w !== undefined && h !== undefined)
         {
             this.u = u;
             this.v = v;
@@ -65,7 +65,7 @@ export class Sprite
 
     public setImage(image?: Graph, u?: number, v?: number, w?: number, h?: number): void
     {
-        if (image!=undefined) 
+        if (image!==undefined) 
             {this.image = image;}
         else
             {this.image = null;}
@@ -118,7 +118,7 @@ export class Sprite
 
     public getLinkDifferenceXY(): [number, number]
     {
-        if(this.link != null)
+        if(this.link !== null)
         {
             let linkSpr: Sprite = this.link;
             let dx, dy;
@@ -187,7 +187,7 @@ export class Sprite
         }
         for(let i=0; i<sprs.length; i++)
         {
-            if (sprs[i]!=null)
+            if (sprs[i]!==null)
             {
                 sprs[i].updateMethod(sprs[i]);
             }
@@ -205,7 +205,7 @@ export class Sprite
             {
 
                 let x, y;
-                if(spr.link!=null)
+                if(spr.link!==null)
                 {
                     let dx, dy;
                     [dx, dy] = spr.getLinkDifferenceXY();
@@ -239,7 +239,7 @@ export class Sprite
         }
         static draw(spr: Sprite, x, y, scale)
         {
-            if (spr.image==null) return;
+            if (spr.image===null) return;
 
             if (spr.isFlip) 
             {

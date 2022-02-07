@@ -96,7 +96,7 @@ socket.addEventListener('message',function(e){
     {
         let n=(i+1)+"";
         s+=`<span class="rankorder">${n.padStart(2, '0')}</span>`;
-        s+=`<span class="rankname">${dat[size+i]==""?"ANONYMOUS":dat[size+i]}</span>`;
+        s+=`<span class="rankname">${dat[size+i]===""?"ANONYMOUS":dat[size+i]}</span>`;
         s+=`<span class="score-number">${dat[i]}</span><br>`
     }
     let par1 = document.getElementById("scores");
@@ -206,7 +206,7 @@ class Title
     {
         Sprite.allUpdate();
         Sprite.allDrawing();
-        if ((input.getMouse.state==Input.Click.LEFT && Useful.between(input.getMouse.x, 0,SCREEN_WIDTH) && Useful.between(input.getMouse.y, 0,SCREEN_HEIGHT)) ||
+        if ((input.getMouse.state===Input.Click.LEFT && Useful.between(input.getMouse.x, 0,SCREEN_WIDTH) && Useful.between(input.getMouse.y, 0,SCREEN_HEIGHT)) ||
             input.getKeyDown['Enter']) 
         {
             Sprite.deleteAll(true);
@@ -274,7 +274,7 @@ class Main
         {
             case GameState.PLAYING:
                 {
-                    //if (Main.count%12==0) gameScore++;
+                    //if (Main.count%12===0) gameScore++;
                     break;
                 }
             case GameState.OVER:
@@ -358,22 +358,22 @@ abstract class MovableUnit extends CollideActor
             this.matY = this.nextMatY; 
 
             let dx, dy;
-            if (this.matX==-1)
+            if (this.matX===-1)
             {
                 this.angle = EAngle.RIGHT;
                 this.isOutScreen = true;
             }
-            else if (this.matY==-1)
+            else if (this.matY===-1)
             {
                 this.angle = EAngle.DOWN;
                 this.isOutScreen = true;
             }
-            else if (this.matX==Conveyor.ARROW_X)
+            else if (this.matX===Conveyor.ARROW_X)
             {
                 this.angle = EAngle.LEFT;
                 this.isOutScreen = true;
             }
-            else if (this.matY==Conveyor.ARROW_Y)
+            else if (this.matY===Conveyor.ARROW_Y)
             {
                 this.angle = EAngle.UP;
                 this.isOutScreen = true;
@@ -449,14 +449,14 @@ abstract class GoInsideUnit extends MovableUnit
     constructor()
     {
         let x, y;
-        if (Useful.rand(2)==0)
+        if (Useful.rand(2)===0)
         {
-            x = Useful.rand(2)==0 ? -1 : Conveyor.ARROW_X
+            x = Useful.rand(2)===0 ? -1 : Conveyor.ARROW_X
             y = Useful.rand(Conveyor.ARROW_Y)
         }
         else
         {
-            y = Useful.rand(2)==0 ? -1 : Conveyor.ARROW_Y
+            y = Useful.rand(2)===0 ? -1 : Conveyor.ARROW_Y
             x = Useful.rand(Conveyor.ARROW_X)
         }
         super(x, y);
@@ -621,11 +621,11 @@ class Bamboo extends CollideActor
             y1 = Useful.rand(Conveyor.ARROW_Y);
             x2 = Useful.rand(Conveyor.ARROW_X);
             y2 = Useful.rand(Conveyor.ARROW_Y);
-            if (x1==x2 && Math.abs(y1-y2)==1 || y1==y2 && Math.abs(x1-x2)==1)
+            if (x1===x2 && Math.abs(y1-y2)===1 || y1===y2 && Math.abs(x1-x2)===1)
             {
                 this.x = (Conveyor.getArrowPos(x1, y1)[0] + Conveyor.getArrowPos(x2, y2)[0])/2;
                 this.y = (Conveyor.getArrowPos(x1, y1)[1] + Conveyor.getArrowPos(x2, y2)[1])/2;
-                if (this.getHit()==null)
+                if (this.getHit()===null)
                 {// その場所にないならオッケー
                     break;
                 }
@@ -665,15 +665,15 @@ class PopManager extends Actor
     }
     protected override update(): void 
     {
-        if (this.time%60==0)
+        if (this.time%60===0)
         {
             new Bakugon();
         }
-        if (this.time%180==0)
+        if (this.time%180===0)
         {
             new Mush();
         }
-        if (this.time%120==0)
+        if (this.time%120===0)
         {
             new Bamboo();
         }
@@ -725,7 +725,7 @@ namespace Effect
             }
             protected override update(): void 
             {
-                if (this.time % 3==0)
+                if (this.time % 3===0)
                 {
                     for (let i=0; i<6; i++)
                     {
@@ -900,12 +900,12 @@ class ArrowController extends Actor
     {   
         if (this.getCanRotateR())
         {
-            if (this.timeOnPush+1 != this.time) Arrow.sole.mat[x][y] += 1;
+            if (this.timeOnPush+1 !== this.time) Arrow.sole.mat[x][y] += 1;
             this.timeOnPush = this.time;
         }
         else if (this.getCanRotateL())
         {
-            if (this.timeOnPush+1 != this.time) Arrow.sole.mat[x][y] += -1;
+            if (this.timeOnPush+1 !== this.time) Arrow.sole.mat[x][y] += -1;
             this.timeOnPush = this.time;
         }
         Arrow.sole.mat[x][y] = ((Arrow.sole.mat[x][y]+4) % 4) as EAngle;
@@ -913,12 +913,12 @@ class ArrowController extends Actor
 
     private getCanRotateR()
     {
-        return (input.getMouse.state == Input.Click.RIGHT)
+        return (input.getMouse.state === Input.Click.RIGHT)
         || (input.getKeyDown['f']);
     }
     private getCanRotateL()
     {
-        return (input.getMouse.state == Input.Click.LEFT)
+        return (input.getMouse.state === Input.Click.LEFT)
         || (input.getKeyDown['d']);;
     }
 
@@ -946,7 +946,7 @@ class Conveyor
 {
     public static isArrowTile(x: number, y: number): boolean
     {
-        return (x+1) % 3==0 && (y+2) % 3==0;
+        return (x+1) % 3===0 && (y+2) % 3===0;
     }
 
     public static readonly ARROW_X = 8;
@@ -994,7 +994,7 @@ abstract class FieldLayerBase extends SelfDrawingActor
     {
         super();
         this.z = z;
-        if (gridUnit!=undefined) this.gridUnit = gridUnit;
+        if (gridUnit!==undefined) this.gridUnit = gridUnit;
         this.setSprZ();
     }
 
@@ -1085,7 +1085,7 @@ class TileLayer extends SelfDrawingActor
         //         let dpX = (x * 3 + 2) * 16 * ROUGH_SCALE;
         //         let dpY = (y * 3 + 1) * 16 * ROUGH_SCALE;
 
-        //         if ((x+y+2) % 2 == 1) images.brick.drawGraph(dpX + 16*ROUGH_SCALE, dpY + 16*ROUGH_SCALE, 0, 0, 32, 32, ROUGH_SCALE);
+        //         if ((x+y+2) % 2 === 1) images.brick.drawGraph(dpX + 16*ROUGH_SCALE, dpY + 16*ROUGH_SCALE, 0, 0, 32, 32, ROUGH_SCALE);
         //     }
         // }
 

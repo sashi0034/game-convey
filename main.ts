@@ -14,6 +14,7 @@ import {
     Hit,
     Collider,
 } from "./gameEngine.js";
+import { getEffectiveConstraintOfTypeParameter, skipPartiallyEmittedExpressions } from "typescript";
 
 export var context;
 export var canvas;
@@ -138,13 +139,21 @@ class Images
 
     punicat: Graph = Graphics.loadGraph("./images/punicat_24x24.png");
     bakugon: Graph = Graphics.loadGraph("./images/bakugon_bomb_24x24.png");
+    bakugonSpark: Graph = Graphics.loadGraph("./images/bakugonspark_24x24.png");
+    explodeBox: Graph = Graphics.loadGraph("./images/explode_box_16x16.png");
+
+    bamboo: Graph = Graphics.loadGraph("./images/grow_bamboo_16x16.png");
+    mush: Graph = Graphics.loadGraph("./images/mush_24x16.png");
+
     lockonCursor: Graph = Graphics.loadGraph("./images/lockon_24x24.png");
+    
 }
 
 
 const EActorZ =
 {
-    CURSOR: -2000,
+    CURSOR: -4000,
+    EFFECT: -2000,
     MOVABLE: 0,
     BACKGRAPHIC: 2000,
 } as const;
@@ -179,6 +188,7 @@ class SceneChage
     }
     
 }
+
 
 
 
@@ -495,24 +505,57 @@ abstract class GoInsideUnit extends MovableUnit
 // バクゴンさん
 class Bakugon extends GoInsideUnit
 {
+    private sparkSpr: Sprite;
+    private explodeTime: number; // 爆発時刻
+
     constructor()
     {
         super();
+
+        // 火花エフェクト
+        this.sparkSpr = new Sprite()
+        this.sparkSpr.setZ(EActorZ.EFFECT);
+        this.sparkSpr.setLink(this.spr);
+        this.explodeTime = 300;
     }
 
     protected override update(): void 
     {
+        if (this.explode()) return;
         super.update();
     }
 
     protected override setImage(): void
     {
-        this.spr.setImage(images.bakugon,
-            Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, 0, 24, 24);
+        if (this.time<this.explodeTime - 120)
+        {// 通常
+            this.spr.setImage(images.bakugon,
+                Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, 0, 24, 24);
+        }
+        else
+        {// 爆発しそう
+            this.spr.setImage(images.bakugon,
+                Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, 
+                (this.time%10)>5 ? 0 : 24, 24, 24);
+        }
+        
+        this.sparkSpr.setImage(images.bakugonSpark, Useful.floorDivide(this.time, this.moveTimeMax/4|0, 4)*24, 0, 24, 24);
     }
     protected override setXY(): void 
     {
         this.spr.setXY(this.x-4, this.y-8);
+    }
+
+    private explode(): boolean
+    {
+        if (this.time>this.explodeTime)
+        {// 爆発
+            new Effect.Explode.Generator(this.x, this.y);
+            Sprite.delete(this.spr);
+            Sprite.delete(this.sparkSpr);
+            return true;
+        }
+        return false;
     }
 }
 
@@ -535,6 +578,74 @@ class PopManager extends Actor
     }
 }
 
+
+
+// エフェクト
+namespace Effect
+{
+    // 爆破
+    export class Explode extends Actor
+    {
+        constructor(private x: number, private y: number)
+        {
+            super();
+        }
+        protected override update(): void 
+        {
+            const span = 16;
+            if (this.time>=span)
+            {
+                Sprite.delete(this.spr);
+                return;
+            }
+            this.spr.setXY(this.x, this.y);
+            this.spr.setImage(images.explodeBox,
+                Useful.floorDivide(this.time, span, 4)*16, 0, 16, 16);
+            super.update();
+        }
+        
+
+        public static Generator = class Generator extends Actor
+        {
+            constructor(private x: number, private y: number)
+            {
+                super();
+            }
+            protected override update(): void 
+            {
+                if (this.time % 3==0)
+                {
+                    for (let i=0; i<6; i++)
+                    {
+                        let x1, y1;
+                        let r = Math.cos(this.time/30 * Math.PI)*32;
+                        let theta = (i*60 + this.time * (60/15)) /180*Math.PI;
+                        x1 = this.x + r * Math.cos(theta);
+                        y1 = this.y + r * Math.sin(theta);
+                        new Explode(x1, y1)
+                    }
+
+                    // for (let i=0; i<3; i++)
+                    // {
+                    //     let x1, y1;
+                    //     let r = Useful.rand(32);
+                    //     let theta = Useful.rand(360)/180*Math.PI;
+                    //     x1 = this.x + r * Math.cos(theta);
+                    //     y1 = this.y + r * Math.sin(theta);
+                    //     new Explode(x1, y1)
+                    // }
+                }
+                if (this.time>30)
+                {
+                    Sprite.delete(this.spr);
+                    return;
+                }
+                super.update();
+            }
+        }
+    }
+
+}
 
 
 

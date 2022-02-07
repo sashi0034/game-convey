@@ -560,6 +560,50 @@ class Bakugon extends GoInsideUnit
 }
 
 
+// きのこ
+class Mush extends GoInsideUnit
+{
+    private lifespan = 60 * 30;
+
+    constructor()
+    {
+        super();
+        this.moveTime = (this.moveTime * 1.5)|0;
+        this.moveTimeMax = this.moveTime;
+    }
+
+    protected override update(): void 
+    {
+        if (this.time>this.lifespan) 
+        {
+            Sprite.delete(this.spr);
+            return;
+        }
+        super.update();
+    }
+
+    protected override setImage(): void
+    {
+        this.spr.setImage(images.mush,
+            Useful.floorDivide(this.time, this.moveTimeMax/2|0, 4)*24, 0, 24, 16);
+        
+        if (this.time>this.lifespan-180)
+        {
+            if ((this.time%10>5))
+            {
+                this.spr.setImage(null);
+            }
+        }
+        
+    }
+    protected override setXY(): void 
+    {
+        this.spr.setXY(this.x-4, this.y-4);
+    }
+
+}
+
+
 // 湧き出すものたちの管理者
 class PopManager extends Actor
 {
@@ -573,7 +617,10 @@ class PopManager extends Actor
         {
             new Bakugon();
         }
-
+        if (this.time%180==0)
+        {
+            new Mush();
+        }
         super.update();    
     }
 }
@@ -583,8 +630,17 @@ class PopManager extends Actor
 // エフェクト
 namespace Effect
 {
+    class Base extends Actor
+    {
+        constructor()
+        {
+            super();
+            this.spr.setZ(EActorZ.EFFECT);
+        }
+    }
+
     // 爆破
-    export class Explode extends Actor
+    export class Explode extends Base
     {
         constructor(private x: number, private y: number)
         {

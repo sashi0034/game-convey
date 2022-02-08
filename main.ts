@@ -14,7 +14,7 @@ import {
     Hit,
     Collider,
 } from "./gameEngine.js";
-import { getEffectiveConstraintOfTypeParameter, getSupportedCodeFixes, IndexKind, skipPartiallyEmittedExpressions } from "typescript";
+
 
 export var context;
 export var canvas;
@@ -46,8 +46,8 @@ const SCREEN_HEIGHT = ROUGH_SCALE*ROUGH_HEIGHT;
 const LEVEL_MAX = 9;
 
 
-var socket = new WebSocket('ws://127.0.0.1:5006');
-//var socket = new WebSocket('ws://49.212.155.232:5006');
+//var socket = new WebSocket('ws://127.0.0.1:5007');
+var socket = new WebSocket('ws://49.212.155.232:5007');
 var isSocketConnect: boolean = false;
 
 
@@ -109,18 +109,17 @@ socket.addEventListener('message',function(e){
 });
 
 
-function checkForm($this)
+
+document.getElementById('your-name').oninput = (e) => 
 {
-    let str: string=$this.value;
+    let str: string=e.currentTarget["value"];
     while(str.match(/[^A-Z^a-z\d\-\_]/))
     {
         str=str.replace(/[^A-Z^a-z\d\-\_]/,"");
     }
-    $this.value=str.toUpperCase().substr(0, 16);
-    playerName = $this.value;
+    e.currentTarget["value"]=str.toUpperCase().substr(0, 16);
+    playerName = e.currentTarget["value"];
 }
-
-
 
 
 

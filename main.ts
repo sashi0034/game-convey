@@ -68,8 +68,8 @@ window.onload = function()
         images = new Images();
 
         SceneChage.init();
-        //SceneChage.toTitle();
-        SceneChage.toMain();
+        SceneChage.toTitle();
+        //SceneChage.toMain();
         
     }
 }
@@ -155,6 +155,7 @@ class Images
 
 const EActorZ =
 {
+    UI: -6000,
     CURSOR: -4000,
     EFFECT: -2000,
     MOVABLE: 0,
@@ -203,36 +204,37 @@ class Title
 {
     static setup()
     {
+        new Arrow();
+        new BackgraphiManager();
         new TitleUi();
+        new UiTexts();
         gameState = GameState.BREAK;
     }
     static loop()
     {
-        Sprite.allUpdate();
-        Sprite.allDrawing();
+        Sprite.updateAll();
+        Sprite.drawingAll();
         if ((input.getMouse.state===Input.Click.LEFT && Useful.between(input.getMouse.x, 0,SCREEN_WIDTH) && Useful.between(input.getMouse.y, 0,SCREEN_HEIGHT)) ||
             input.getKeyDown['Enter']) 
         {
-            Sprite.deleteAll(true);
+            Sprite.disposeAll(true);
             Sound.playSoundFile("./sounds/startPush.mp3");
             SceneChage.toMain();
         }
     }
 }
 
-class TitleUi
+class TitleUi extends SelfDrawingActor
 {
     constructor()
     {
-        // let sp=Sprite.make();
-        // Sprite.belong(sp, this);
-        // Sprite.drawing(sp, this.drawing);
-        // Sprite.offset(sp, 0 , 0, -4096);
-        // Useful.drawStringInit();
+        super();
+        this.spr.setZ(EActorZ.UI);
+        Useful.drawStringInit();
     }
-    drawing(x,y)
+    protected override drawing(hX, hY)
     {
-        Useful.drawStringEdged(108*ROUGH_SCALE, SCREEN_HEIGHT/2-24, "PUSH 'Enter' TO START THE GAME");
+        Useful.drawStringEdged(108*ROUGH_SCALE, SCREEN_HEIGHT/2-24, "PUSH CLICK TO START THE GAME");
     }
 }
 
@@ -252,42 +254,42 @@ function scoresWrite()
 //メインループ
 class Main
 {
-    static count=0;
-    static finishCount=0;
-    static level=0;
-    static levelUpTime = 120;
-    static showLevelUpTime = 0;
+    static time;
+    static finishTime;
+    static level;
+    static levelUpTime;
+    static showLevelUpTime;
 
     static setup()
     {
-        new Arrow();
+        new BalanceManager();
         new BackgraphiManager();
         new ArrowController();
         new Punicat();
         new PopManager();
+        new UiTexts();
     }
 
     static loop() 
     {
         context.clearRect( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT );
-        Sprite.allUpdate();
-        Sprite.allDrawing();
+        Sprite.updateAll();
+        Sprite.drawingAll();
 
-        Main.count++;
+        Main.time++;
         switch(gameState)
         {
             case GameState.PLAYING:
                 {
-                    //if (Main.count%12===0) gameScore++;
                     break;
                 }
             case GameState.OVER:
                 {
-                    Main.finishCount++;
-                    if (Main.finishCount>60*4)
+                    Main.finishTime++;
+                    if (Main.finishTime>60*4)
                     {
                         scoresWrite();
-                        Sprite.deleteAll(true);
+                        Sprite.disposeAll(false);
                         SceneChage.toTitle();
                         return;
                     }
@@ -443,7 +445,11 @@ class Punicat extends MovableUnit
 
     protected override update(): void 
     {
-        if (this.doCollide()===true) return;
+        if (this.doCollide()===true) 
+        {
+            gameState = GameState.OVER;
+            return;
+        }
         this.moveArrow();
         super.update();
         this.spr.setXY(this.x-4, this.y-8);
@@ -459,7 +465,7 @@ class Punicat extends MovableUnit
             if (unit.getIsItem===false)
             {
                 new Effect.Star.Generator(this.x+8, this.y+8, 1);
-                Sprite.delete(this.spr);
+                Sprite.dispose(this.spr);
                 return true;
             }
         }
@@ -468,7 +474,7 @@ class Punicat extends MovableUnit
         {
             new Effect.Star.Generator(this.x+8, this.y+8, 1);
             Effect.Smoke.generate(this.x+8, this.y+8);
-            Sprite.delete(this.spr);
+            Sprite.dispose(this.spr);
             return true;
         }
         return false;
@@ -478,6 +484,12 @@ class Punicat extends MovableUnit
     {
         this.spr.setImage(images.punicat,
         Useful.floorDivide(this.time, this.moveTimeMax/4|0, 4)*24, this.angle*24, 24, 24);
+    }
+
+    protected override onDetermineAng(): void 
+    {
+        super.onDetermineAng();
+        gameScore += 1;    
     }
 
     protected override destructor(): void 
@@ -505,7 +517,7 @@ class Gorilla extends MovableUnit
     {
         if (this.getIsOutScreen) 
         {// 外に出た
-            Sprite.delete(this.spr);
+            Sprite.dispose(this.spr);
             return;
         }
         if (this.doCollide()===true) return;
@@ -520,7 +532,8 @@ class Gorilla extends MovableUnit
         if (Hit.getHitRect(this.x, this.y, 16, 16, EActorColbit.EXPLODE)!==null)
         {
             Effect.Smoke.generate(this.x+8, this.y+8);
-            Sprite.delete(this.spr);
+            Sprite.dispose(this.spr);
+            gameScore += 50;
             return true;
         }
         return false;
@@ -583,7 +596,7 @@ abstract class GoInsideUnit extends MovableUnit
     {
         if (this.getIsOutScreen) 
         {// 外に出た
-            Sprite.delete(this.spr);
+            Sprite.dispose(this.spr);
             return;
         }
         if (this.canFirstFlimpse()) this.firstGlimpse()
@@ -646,7 +659,7 @@ class Bakugon extends GoInsideUnit
         if ((this.time>1 && this.getHit()!==null) || Hit.getHitRect(this.x, this.y, 16, 16, EActorColbit.EXPLODE)!==null)
         {
             new BakugonExplosion(this.x+8, this.y+8);
-            Sprite.delete(this.spr);
+            Sprite.dispose(this.spr);
             return true;
         }
         return false;
@@ -678,7 +691,7 @@ class Bakugon extends GoInsideUnit
         if (this.time>this.explodeTime)
         {// 爆発
             new BakugonExplosion(this.x+8, this.y+8);
-            Sprite.delete(this.spr);
+            Sprite.dispose(this.spr);
             return true;
         }
         return false;
@@ -687,7 +700,7 @@ class Bakugon extends GoInsideUnit
     protected override destructor(): void 
     {
         super.destructor();
-        Sprite.delete(this.sparkSpr);
+        Sprite.dispose(this.sparkSpr);
     }
 }
 
@@ -710,7 +723,7 @@ class Mush extends GoInsideUnit
         if (this.doCollide()===true) return;
         if (this.time>this.lifespan) 
         {
-            Sprite.delete(this.spr);
+            Sprite.dispose(this.spr);
             return;
         }
         super.update();
@@ -721,7 +734,14 @@ class Mush extends GoInsideUnit
         if (Hit.getHitRect(this.x, this.y, 16, 16, EActorColbit.EXPLODE)!==null)
         {
             Effect.Smoke.generate(this.x+8, this.y+8);
-            Sprite.delete(this.spr);
+            Sprite.dispose(this.spr);
+            return true;
+        }
+        if (Punicat.sole.getIsAlive===true && this.getHitWith(Punicat.sole)===true)
+        {
+            new Effect.Star.Generator(this.x+8, this.y+8, 0);
+            Sprite.dispose(this.spr);
+            gameScore += 150;
             return true;
         }
         return false;
@@ -786,7 +806,7 @@ class Bamboo extends CollideActor
         if (this.time>this.lifespan)
         {// ゴリラ出して消す
             new Gorilla(this.point1, this.point2);
-            Sprite.delete(this.spr);
+            Sprite.dispose(this.spr);
             return;
         }
         if (this.time<40)
@@ -807,8 +827,9 @@ class Bamboo extends CollideActor
     {
         if (Punicat.sole.getIsAlive===true && this.getHitWith(Punicat.sole)===true)
         {
-            new Effect.Star.Generator(this.x+8, this.y+8, 0);
-            Sprite.delete(this.spr);
+            new Effect.Star.Generator(this.x+8, this.y+8, 0, 6);
+            Sprite.dispose(this.spr);
+            gameScore += 100;
             return true;
         }
         return false;
@@ -824,6 +845,7 @@ class PopManager extends Actor
     constructor()
     {
         super();
+
     }
     protected override update(): void 
     {
@@ -842,6 +864,39 @@ class PopManager extends Actor
         super.update();    
     }
 }
+
+
+// バランス調整
+class BalanceManager extends Actor
+{
+    public static sole: BalanceManager = null;
+
+    public bakugonSpan = 0;
+    public mushSpan = 0;
+    public bambooSpan = 0;
+
+    public constructor()
+    {
+        super();
+        BalanceManager.sole = this;
+
+        gameState = GameState.PLAYING;
+        gameScore=0;
+        Main.time=0;
+        Main.finishTime=0;
+        Main.level=0;
+        Main.levelUpTime = 120;
+        Main.showLevelUpTime = 0;
+    }
+
+    public update()
+    {
+
+    }
+}
+
+
+
 
 
 
@@ -874,7 +929,7 @@ namespace Effect
             const span = 16;
             if (this.time>=span)
             {
-                Sprite.delete(this.spr);
+                Sprite.dispose(this.spr);
                 return;
             }
             this.spr.setXY(this.x, this.y);
@@ -917,7 +972,7 @@ namespace Effect
                 }
                 if (this.time>30)
                 {
-                    Sprite.delete(this.spr);
+                    Sprite.dispose(this.spr);
                     return;
                 }
                 super.update();
@@ -938,7 +993,7 @@ namespace Effect
             const span = 20;
             if (this.time>=span * 2)
             {
-                Sprite.delete(this.spr);
+                Sprite.dispose(this.spr);
                 return;
             }
             this.spr.setXY(this.x, this.y);
@@ -980,14 +1035,15 @@ namespace Effect
             this.vel += 0.05;
             this.spr.setXY(this.x, this.y);
 
-            if (this.time>180) {Sprite.delete(this.spr); return;}
+            if (this.time>180) {Sprite.dispose(this.spr); return;}
             super.update();
         }
-        static generate(x: number, y: number, kind: number)
+        static generate(x: number, y: number, kind: number, num: number)
         {
-            for (let i=-6; i<=6; i++)
+            num = num/2|0;
+            for (let i=-num; i<=num; i++)
             {
-                let theta=(-90+i*30)/180*Math.PI;
+                let theta=(-90+i*180/num)/180*Math.PI;
                 let vx=Math.cos(theta)*2;
                 let vy=Math.sin(theta)*2;
 
@@ -996,19 +1052,21 @@ namespace Effect
         }
         public static Generator = class Generator extends Actor
         {
-            public constructor(private x: number, private y: number, private kind: number)
+            private num: number = 12;
+            public constructor(private x: number, private y: number, private kind: number, num?: number)
             {
                 super();
+                if (num!==undefined) this.num = num;
             }
             protected override update(): void 
             {
                 if (this.time % 10===0)
                 {
-                    Star.generate(this.x, this.y, this.kind)
+                    Star.generate(this.x, this.y, this.kind, this.num)
                 }
                 if (this.time>=30)
                 {
-                    Sprite.delete(this.spr);
+                    Sprite.dispose(this.spr);
                     return;
                 }
                 super.update();
@@ -1032,7 +1090,7 @@ class BakugonExplosion extends Effect.Explode.Generator
     }
     protected destructor(): void 
     {
-        Sprite.delete(this.col.getSpr);
+        Sprite.dispose(this.col.getSpr);
         super.destructor();    
     }
 }
@@ -1373,6 +1431,44 @@ class TileLayer extends SelfDrawingActor
 
 
 
+
+
+class UiTexts extends SelfDrawingActor
+{
+    constructor()
+    {
+        super();
+        this.spr.setZ(EActorZ.UI);
+        Useful.drawStringInit();
+    }
+    protected override drawing(hX, hY)
+    {
+        this.baseText();
+        
+        if (gameState===GameState.OVER)
+        {
+            Useful.drawStringEdged(160*ROUGH_SCALE, SCREEN_HEIGHT/2-24, "G A M E  O V E R");
+        }
+        if (gameState===GameState.PLAYING)
+        {
+            if (Main.showLevelUpTime>0)
+            {
+                Useful.drawStringEdged(172*ROUGH_SCALE, SCREEN_HEIGHT/2-24, "L E V E L  U P");
+                Main.showLevelUpTime--;
+            }
+        }
+    }
+    private baseText()
+    {
+        Useful.drawStringEdged(...Useful.xyToRough([0,ROUGH_HEIGHT-18]), `Score: ${gameScore}`);
+        {
+            let t=`Level: ${Main.level}`
+            if (Main.level>=9) t="Level: ∞"
+            Useful.drawStringEdged(...Useful.xyToRough([364,ROUGH_HEIGHT-18]),t);
+        }
+    }
+
+}
 
 
 

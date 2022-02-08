@@ -156,47 +156,45 @@ export class Sprite
         this.isProtect = protect;
     }
 
-    public static delete(spr: Sprite): void;
-    public static delete(spr: Sprite, isProtect: boolean): void;
+    public static dispose(spr: Sprite): void;
+    public static dispose(spr: Sprite, isProtect: boolean): void;
 
-    public static delete(spr: Sprite, isProtect: boolean = false): void
+    public static dispose(spr: Sprite, isProtect: boolean = false): void
     {
-        if (isProtect) return;
+        if (isProtect===true && spr.isProtect===true) return;
         spr.destructorMethod(spr);
-        Useful.remove(Sprite.sprites, spr);
+        this.sprites[this.sprites.indexOf(spr)] = null;
     }
 
-    public static deleteAll(isProtect: boolean=false)
+    public static disposeAll(isProtect: boolean=false)
     {
-        let target: Sprite[];
-        for(let i=this.sprites.length - 1; i>=0; i--)
+        for (let spr of this.sprites)
         {
-            if (isProtect && this.sprites[i].isProtect) continue; 
-            this.delete(this.sprites[i], isProtect);
+            if (spr!==null) Sprite.dispose(spr, isProtect);
         }
-}
+        this.garbageCollect();
+    }
 
 
 
-    static allUpdate(): void
+    public static updateAll(): void
     {
-        let sprs: Sprite[] = [];
-        for (let i=0; i<this.sprites.length; i++)
+        for (let spr of this.sprites)
         {
-            sprs.push(this.sprites[i])
+            if (spr!==null) spr.updateMethod(spr);
         }
-        for(let i=0; i<sprs.length; i++)
+        Sprite.garbageCollect();
+    }
+    private static garbageCollect(): void
+    {
+        while (this.sprites.indexOf(null)!==-1)
         {
-            if (sprs[i]!==null)
-            {
-                sprs[i].updateMethod(sprs[i]);
-            }
+            Useful.remove(this.sprites, null);
         }
     }
 
-    static allDrawing(): void
+    public static drawingAll(): void
     {
-        
         this.sprites.sort(function(a: Sprite, b: Sprite){return b.z-a.z});
 
         for (let i=0; i<this.sprites.length; i++)

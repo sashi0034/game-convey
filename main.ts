@@ -14,7 +14,7 @@ import {
     Hit,
     Collider,
 } from "./gameEngine.js";
-import { getEffectiveConstraintOfTypeParameter, IndexKind, skipPartiallyEmittedExpressions } from "typescript";
+import { getEffectiveConstraintOfTypeParameter, getSupportedCodeFixes, IndexKind, skipPartiallyEmittedExpressions } from "typescript";
 
 export var context;
 export var canvas;
@@ -43,6 +43,7 @@ const ROUGH_WIDTH = 416;
 const ROUGH_HEIGHT = 240;
 const SCREEN_WIDTH = ROUGH_SCALE*ROUGH_WIDTH;
 const SCREEN_HEIGHT = ROUGH_SCALE*ROUGH_HEIGHT;
+const LEVEL_MAX = 9;
 
 
 var socket = new WebSocket('ws://127.0.0.1:5006');
@@ -257,7 +258,6 @@ class Main
     static time;
     static finishTime;
     static level;
-    static levelUpTime;
     static showLevelUpTime;
 
     static setup()
@@ -339,7 +339,7 @@ abstract class MovableUnit extends CollideActor
     protected angle: EAngle = 0;
 
     protected moveTime: number = 0;
-    protected moveTimeMax: number = 120;
+    protected moveTimeMax: number = BalanceManager.sole.moveTime;
 
     private isFirstMove: boolean = false;
     private isOutScreen: boolean = false;
@@ -352,6 +352,7 @@ abstract class MovableUnit extends CollideActor
     constructor(startX: number, startY: number)
     {
         super(new Collider.Rectangle(0, 0, 16, 16), EActorColbit.CREATURE);
+        this.onUpdateMoveTime();
         this.moveTime = this.moveTimeMax;
         this.nextMatX = startX;
         this.nextMatY = startY;
@@ -380,6 +381,7 @@ abstract class MovableUnit extends CollideActor
             [dx, dy] = Angle.toXY(this.angle);
             this.nextMatX = this.matX + dx;
             this.nextMatY = this.matY + dy;
+            this.onUpdateMoveTime();
             this.moveTime = 0;
 
             [this.x, this.y] = Conveyor.getArrowPos(this.matX, this.matY);
@@ -397,6 +399,10 @@ abstract class MovableUnit extends CollideActor
         }
 
         this.spr.setZ(EActorZ.MOVABLE-this.y/ROUGH_HEIGHT);
+    }
+    protected onUpdateMoveTime()
+    {
+        this.moveTimeMax = BalanceManager.sole.moveTime;
     }
     protected abstract setImage(): void;
     protected abstract doCollide(): boolean;
@@ -509,8 +515,12 @@ class Gorilla extends MovableUnit
     {
         super(...startPoint);
         [this.nextMatX, this.nextMatY] = nextPoint;
-        this.moveTimeMax *= 5;
+        
         this.moveTime = this.moveTimeMax/2|0;
+    }
+    protected override onUpdateMoveTime(): void 
+    {
+        this.moveTimeMax *= 3;
     }
 
     protected override update(): void 
@@ -639,13 +649,19 @@ class Bakugon extends GoInsideUnit
     constructor()
     {
         super();
+        
+        this.explodeTime = BalanceManager.sole.bakugonLifeSpan;
 
         // 火花エフェクト
         this.sparkSpr = new Sprite()
         this.sparkSpr.setZ(EActorZ.EFFECT);
         this.sparkSpr.setLink(this.spr);
-        this.explodeTime = 60 * 15;
     }
+    protected override onUpdateMoveTime(): void 
+    {
+        this.moveTime = (this.moveTime * 1.2)|0;
+    }
+
 
     protected override update(): void 
     {
@@ -713,9 +729,13 @@ class Mush extends GoInsideUnit
     constructor()
     {
         super();
-        this.moveTime = (this.moveTime * 1.5)|0;
+        
         this.moveTimeMax = this.moveTime;
         this.isItem = true;
+    }
+    protected override onUpdateMoveTime(): void 
+    {
+        this.moveTime = (this.moveTime * 1.5)|0;
     }
 
     protected override update(): void 
@@ -771,7 +791,7 @@ class Mush extends GoInsideUnit
 // タケノコ
 class Bamboo extends CollideActor
 {
-    private lifespan: number = 60 * 10;
+    private lifespan: number = BalanceManager.sole.bambooLifeSpan;
     private point1: [number, number];
     private point2: [number, number];
 
@@ -800,6 +820,7 @@ class Bamboo extends CollideActor
                 }
             }
         }
+        BalanceManager.sole.fieldBamboo++;
     }
     protected override update(): void 
     {
@@ -834,6 +855,13 @@ class Bamboo extends CollideActor
         }
         return false;
     }
+    protected override destructor(): void 
+    {
+        super.destructor()
+        {
+            BalanceManager.sole.fieldBamboo--;
+        }    
+    }
 }
 
 
@@ -842,25 +870,34 @@ class Bamboo extends CollideActor
 // 湧き出すものたちの管理者
 class PopManager extends Actor
 {
+    static sole: PopManager = null;
+    public popTime = 0;
+
     constructor()
     {
         super();
-
+        PopManager.sole = this;
     }
     protected override update(): void 
     {
-        if (this.time%60===0)
+        if (BalanceManager.sole.popCount>0)
         {
-            new Bakugon();
+            if (BalanceManager.sole.bakugonPopSpan!==0 && this.popTime%BalanceManager.sole.bakugonPopSpan===0)
+            {
+                new Bakugon();
+            }
+            if (BalanceManager.sole.mushPopSpan!==0 && this.popTime%BalanceManager.sole.mushPopSpan===0)
+            {
+                new Mush();
+            }
+            if (BalanceManager.sole.bambooPopSpan!==0 && this.popTime%BalanceManager.sole.bambooPopSpan===0)
+            {
+                // 面倒くさいからタケノコでポップ管理する
+                BalanceManager.sole.popCount--;
+                new Bamboo();
+            }
         }
-        if (this.time%180===0)
-        {
-            new Mush();
-        }
-        if (this.time%120===0)
-        {
-            new Bamboo();
-        }
+        this.popTime++;
         super.update();    
     }
 }
@@ -871,9 +908,15 @@ class BalanceManager extends Actor
 {
     public static sole: BalanceManager = null;
 
-    public bakugonSpan = 0;
-    public mushSpan = 0;
-    public bambooSpan = 0;
+    public bakugonPopSpan = 0;
+    public mushPopSpan = 0;
+    public bambooPopSpan = 0;
+    public bakugonLifeSpan = 60 * 15;
+    public bambooLifeSpan = 60 * 60;
+    public moveTime = 300;
+
+    public popCount = 0;
+    public fieldBamboo = 0;
 
     public constructor()
     {
@@ -885,14 +928,118 @@ class BalanceManager extends Actor
         Main.time=0;
         Main.finishTime=0;
         Main.level=0;
-        Main.levelUpTime = 120;
         Main.showLevelUpTime = 0;
     }
 
-    public update()
+    protected override update()
     {
-
+        const sec = 60;
+        if (this.fieldBamboo<=0 && this.popCount<=0 && Main.level<LEVEL_MAX)
+        {
+            this.levelUp();
+            switch (Main.level)
+            {
+                case 1:
+                {
+                    this.popCount = 2;
+                    this.moveTime = 90;
+                    this.bambooPopSpan = sec * 6;
+                    this.bambooLifeSpan = sec * 180;
+                    break;
+                }
+                case 2:
+                {
+                    this.popCount = 2;
+                    this.bambooPopSpan = sec * 10;
+                    this.mushPopSpan = sec * 3;
+                    break;
+                }
+                case 3:
+                {
+                    this.popCount = 2;
+                    this.moveTime = sec * 2;
+                    this.bakugonPopSpan = sec * 4;
+                    this.mushPopSpan = sec * 8;
+                    break;
+                }
+                case 4:
+                    {
+                        this.popCount = 5;
+                        this.bambooPopSpan = sec * 3;
+                        this.bambooLifeSpan = sec * 15;
+                        this.bakugonPopSpan = sec * 4;
+                        break;
+                    }
+                case 5:
+                    {
+                        this.popCount = 3;
+                        this.bakugonPopSpan = sec * 3;
+                        this.bambooPopSpan = sec * 15;
+                        this.bambooLifeSpan = sec * 20;
+                        this.moveTime = sec * 2;
+                        break;
+                    }
+                case 5:
+                    {
+                        this.popCount = 3;
+                        this.bakugonPopSpan = sec * 2.5;
+                        this.bambooPopSpan = sec * 10;
+                        this.moveTime = (sec * 1.5)|0;
+                        break;
+                    }
+                case 6:
+                    {
+                        this.popCount = 5;
+                        this.bakugonPopSpan = sec * 2;
+                        this.bambooPopSpan = sec * 6;
+                        this.moveTime = (sec * 1.2)|0;
+                        this.mushPopSpan = sec * 5;
+                        this.bambooLifeSpan = sec * 18;
+                        break;
+                    }
+                case 7:
+                    {
+                        this.popCount = 15;
+                        this.bakugonPopSpan = sec * 3;
+                        this.bambooPopSpan = sec * 4;
+                        this.moveTime = (sec * 1.0)|0;
+                        this.mushPopSpan = sec * 4;
+                        break;
+                    }
+                case 8:
+                    {
+                        this.popCount = 15;
+                        this.bakugonPopSpan = sec * 2.5;
+                        this.bambooPopSpan = sec * 3;
+                        this.bambooLifeSpan = sec * 15;
+                        this.moveTime = (sec * 0.8)|0;
+                        break;
+                    }
+                case 9:
+                    {
+                        this.popCount = 1 << 31;
+                        this.bakugonPopSpan = sec * 2;
+                        this.bambooPopSpan = sec * 2.5;
+                        this.bambooLifeSpan = sec * 10;
+                        this.moveTime = (sec * 0.5)|0;
+                        break;
+                    }
+    
+            }
+        }
     }
+
+    private levelUp()
+    {
+        if (Main.level>0)
+        {
+            Main.showLevelUpTime = 60 * 2;
+        }
+        Main.level++;
+        PopManager.sole.popTime = 0;
+    }
+
+
 }
 
 
@@ -1463,7 +1610,7 @@ class UiTexts extends SelfDrawingActor
         Useful.drawStringEdged(...Useful.xyToRough([0,ROUGH_HEIGHT-18]), `Score: ${gameScore}`);
         {
             let t=`Level: ${Main.level}`
-            if (Main.level>=9) t="Level: ∞"
+            if (Main.level>=LEVEL_MAX) t="Level: ∞"
             Useful.drawStringEdged(...Useful.xyToRough([364,ROUGH_HEIGHT-18]),t);
         }
     }

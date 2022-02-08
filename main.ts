@@ -14,7 +14,7 @@ import {
     Hit,
     Collider,
 } from "./gameEngine.js";
-import { getEffectiveConstraintOfTypeParameter, skipPartiallyEmittedExpressions } from "typescript";
+import { getEffectiveConstraintOfTypeParameter, IndexKind, skipPartiallyEmittedExpressions } from "typescript";
 
 export var context;
 export var canvas;
@@ -429,7 +429,9 @@ abstract class MovableUnit extends CollideActor
 class Punicat extends MovableUnit
 {
     static sole: Punicat = null;
-    
+    private isAlive = true;
+    public get getIsAlive() { return this.isAlive; }
+
     constructor()
     {
         super(Conveyor.ARROW_X/2|0, Conveyor.ARROW_Y/2|0);
@@ -447,8 +449,16 @@ class Punicat extends MovableUnit
 
     protected override doCollide(): boolean 
     {
+        if (this.getHit()!==null)
+        {   
+            new Effect.Star.Generator(this.x+8, this.y+8, 1);
+            Sprite.delete(this.spr);
+            return true;
+        }
+
         if (Hit.getHitRect(this.x, this.y, 16, 16, EActorColbit.EXPLODE)!==null)
         {
+            new Effect.Star.Generator(this.x+8, this.y+8, 1);
             Effect.Smoke.generate(this.x+8, this.y+8);
             Sprite.delete(this.spr);
             return true;
@@ -464,6 +474,7 @@ class Punicat extends MovableUnit
 
     protected override destructor(): void 
     {
+        this.isAlive = false;
         super.destructor();   
     }
 
@@ -778,8 +789,20 @@ class Bamboo extends CollideActor
         {// 消える前にちらちらする
             this.spr.setImage(this.time%10<5 ? null : images.bamboo)
         }
+        if (this.doCollide()===true) return;
         super.update();
         this.spr.setXY(this.x, this.y - 4)
+    }
+
+    protected doCollide(): boolean 
+    {
+        if (Punicat.sole.getIsAlive===true && this.getHitWith(Punicat.sole)===true)
+        {
+            new Effect.Star.Generator(this.x+8, this.y+8, 0);
+            Sprite.delete(this.spr);
+            return true;
+        }
+        return false;
     }
 }
 
@@ -821,7 +844,7 @@ class PopManager extends Actor
 */
 namespace Effect
 {
-    class Base extends Actor
+    class EffectBase extends Actor
     {
         constructor()
         {
@@ -831,7 +854,7 @@ namespace Effect
     }
 
     // 爆破
-    export class Explode extends Base
+    export class Explode extends EffectBase
     {
         private constructor(private x: number, private y: number)
         {
@@ -895,7 +918,7 @@ namespace Effect
     }
 
     // スモーク
-    export class Smoke extends Base
+    export class Smoke extends EffectBase
     {
         private constructor(private x: number, private y: number)
         {
@@ -924,7 +947,63 @@ namespace Effect
         }
     }
 
+    // スター
+    export class Star extends EffectBase
+    {
+        private vel = 1;
+        private constructor(
+            private kind: number, 
+            private x: number,
+            private y: number,
+            private vx: number,
+            private vy: number)
+        {
+            super();
+            this.spr.setImage(images.star, this.kind*24, 0, 24, 24);
+        }
+        
+        protected override update()
+        {
+            this.x+=this.vx * this.vel;
+            this.y+=this.vy * this.vel;
+            this.vel += 0.05;
+            this.spr.setXY(this.x, this.y);
 
+            if (this.time>180) {Sprite.delete(this.spr); return;}
+            super.update();
+        }
+        static generate(x: number, y: number, kind: number)
+        {
+            for (let i=-6; i<=6; i++)
+            {
+                let theta=(-90+i*30)/180*Math.PI;
+                let vx=Math.cos(theta)*2;
+                let vy=Math.sin(theta)*2;
+
+                new Effect.Star(kind, x-12, y-12, vx, vy);
+            }
+        }
+        public static Generator = class Generator extends Actor
+        {
+            public constructor(private x: number, private y: number, private kind: number)
+            {
+                super();
+            }
+            protected override update(): void 
+            {
+                if (this.time % 10===0)
+                {
+                    Star.generate(this.x, this.y, this.kind)
+                }
+                if (this.time>=30)
+                {
+                    Sprite.delete(this.spr);
+                    return;
+                }
+                super.update();
+            }
+        }
+    }
 }
 
 

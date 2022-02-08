@@ -104,6 +104,21 @@ export class CollideActor extends Actor
     {
         return Hit.getHitCollideActor(this);
     }
+    public getHitWith(actor: CollideActor): boolean
+    {
+        switch (this.shape.type)
+        {
+            case Collider.EType.Rectangle:
+            {
+                let rect: Collider.Rectangle = this.shape as Collider.Rectangle;
+                return Hit.getHitRectWith(
+                    this.x+rect.colliderX, this.y+rect.colliderY, 
+                    rect.colliderWidth, rect.colliderHeight, this.colbit, actor);
+            }
+        }
+        return false;
+    }
+
 }
 
 
@@ -169,33 +184,42 @@ export namespace Hit
             let col: CollideActor = cols[i];
             if ((col.getColbit & colbit) !== 0)
             {
-                let shape = col.getShape;
-
-                switch (shape.type)
+                if (getHitRectWith(x, y, width, height, colbit, col)===true) 
                 {
-                    case Collider.EType.Rectangle:
-                    {// 長方形同士の当たり判定
-                        let rect: Collider.Rectangle = shape as Collider.Rectangle;
-                        if (checkRectReck(col.getX + rect.colliderX, col.getY + rect.colliderY, rect.colliderWidth, rect.colliderHeight,
-                            x, y, width, height))
-                        {
-                            ret = col;
-                        }
-                        break;
-                    }
-                    default:
-                        break;
-                }
-                if (ret !== null) 
-                {   
+                    ret = col;
                     retI = i
                     break;
                 }
             }
         }
         return [ret, retI];
-
     }
+
+    export function getHitRectWith(x: number, y: number, 
+        width: number, height: number, colbit: number, col: CollideActor): boolean
+    {
+        let shape: Collider.Shape = col.getShape;
+        switch (shape.type)
+        {
+            case Collider.EType.Rectangle:
+            {// 長方形同士の当たり判定
+                let rect: Collider.Rectangle = shape as Collider.Rectangle;
+                if (checkRectReck(col.getX + rect.colliderX, col.getY + rect.colliderY, rect.colliderWidth, rect.colliderHeight,
+                    x, y, width, height))
+                {
+                    return true;
+                }
+                break;
+            }
+            default:
+                break;
+        }
+        return false;
+    }
+
+
+
+
 
     export function getHitRectAll(x: number, y: number, 
         width: number, height: number, colbit: number): CollideActor[]

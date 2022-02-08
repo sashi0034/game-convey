@@ -344,6 +344,9 @@ abstract class MovableUnit extends CollideActor
     public get getIsFirstMove(): boolean {return this.isFirstMove;}
     public get getIsOutScreen(): boolean {return this.isOutScreen;}
 
+    protected isItem: boolean = false;
+    public get getIsItem() {return this.isItem;}
+
     constructor(startX: number, startY: number)
     {
         super(new Collider.Rectangle(0, 0, 16, 16), EActorColbit.CREATURE);
@@ -449,11 +452,16 @@ class Punicat extends MovableUnit
 
     protected override doCollide(): boolean 
     {
+        let hit: CollideActor = this.getHit();
         if (this.getHit()!==null)
-        {   
-            new Effect.Star.Generator(this.x+8, this.y+8, 1);
-            Sprite.delete(this.spr);
-            return true;
+        {
+            let unit = hit as MovableUnit;
+            if (unit.getIsItem===false)
+            {
+                new Effect.Star.Generator(this.x+8, this.y+8, 1);
+                Sprite.delete(this.spr);
+                return true;
+            }
         }
 
         if (Hit.getHitRect(this.x, this.y, 16, 16, EActorColbit.EXPLODE)!==null)
@@ -694,11 +702,12 @@ class Mush extends GoInsideUnit
         super();
         this.moveTime = (this.moveTime * 1.5)|0;
         this.moveTimeMax = this.moveTime;
+        this.isItem = true;
     }
 
     protected override update(): void 
     {
-        if (this.doCollide) return;
+        if (this.doCollide()===true) return;
         if (this.time>this.lifespan) 
         {
             Sprite.delete(this.spr);
@@ -959,7 +968,9 @@ namespace Effect
             private vy: number)
         {
             super();
+            this.spr.setXY(x, y);
             this.spr.setImage(images.star, this.kind*24, 0, 24, 24);
+            this.spr.SetBlendPal(200);
         }
         
         protected override update()

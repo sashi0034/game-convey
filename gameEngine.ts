@@ -72,12 +72,14 @@ export class CollideActor extends Actor
     protected x: number = 0;
     protected y: number = 0;
     protected colbit: number;
-    protected shape: Collider.Shape;
+    private shape: Collider.Shape;
 
     public get getX() {return this.x;}
     public get getY() {return this.y;}
     public get getColbit() {return this.colbit;}
     public get getShape() {return this.shape;}
+    public setX(value) {this.x = value;}
+    public setY(value) {this.y = value;}
 
     constructor(shape: Collider.Shape, colbit: number)
     {

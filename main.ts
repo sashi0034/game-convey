@@ -142,6 +142,8 @@ class Images
     gorilla: Graph = Graphics.loadGraph("./images/gorilla_24x24.png");
     bakugonSpark: Graph = Graphics.loadGraph("./images/bakugonspark_24x24.png");
     explodeBox: Graph = Graphics.loadGraph("./images/explode_box_16x16.png");
+    smoke: Graph = Graphics.loadGraph("./images/smoke_32x32.png");
+    star: Graph = Graphics.loadGraph("./images/stars_24x24.png");
 
     bamboo: Graph = Graphics.loadGraph("./images/grow_bamboo_16x16.png");
     mush: Graph = Graphics.loadGraph("./images/mush_24x16.png");
@@ -165,6 +167,7 @@ const EActorColbit =
 {
     CREATURE: 1 << 0,
     BAMBOO: 1 << 1,
+    EXPLODE: 1 << 2,
 } as const;
 type EActorColbit = typeof EActorColbit[keyof typeof EActorColbit];
 
@@ -390,7 +393,8 @@ abstract class MovableUnit extends CollideActor
 
         this.spr.setZ(EActorZ.MOVABLE-this.y/ROUGH_HEIGHT);
     }
-    protected abstract setImage();
+    protected abstract setImage(): void;
+    protected abstract doCollide(): boolean;
 
     protected onDetermineAng(): void
     {
@@ -434,10 +438,22 @@ class Punicat extends MovableUnit
 
     protected override update(): void 
     {
+        if (this.doCollide()===true) return;
         this.moveArrow();
         super.update();
         this.spr.setXY(this.x-4, this.y-8);
         this.setImage();
+    }
+
+    protected override doCollide(): boolean 
+    {
+        if (Hit.getHitRect(this.x, this.y, 16, 16, EActorColbit.EXPLODE)!==null)
+        {
+            Effect.Smoke.generate(this.x+8, this.y+8);
+            Sprite.delete(this.spr);
+            return true;
+        }
+        return false;
     }
 
     protected override setImage() 
@@ -448,8 +464,7 @@ class Punicat extends MovableUnit
 
     protected override destructor(): void 
     {
-        super.destructor();
-        Punicat.sole = null;    
+        super.destructor();   
     }
 
 }
@@ -469,10 +484,27 @@ class Gorilla extends MovableUnit
 
     protected override update(): void 
     {
+        if (this.getIsOutScreen) 
+        {// 外に出た
+            Sprite.delete(this.spr);
+            return;
+        }
+        if (this.doCollide()===true) return;
         this.moveArrow();
         super.update();
         this.spr.setXY(this.x-4, this.y-8);
         this.setImage();
+    }
+
+    protected override doCollide(): boolean 
+    {
+        if (Hit.getHitRect(this.x, this.y, 16, 16, EActorColbit.EXPLODE)!==null)
+        {
+            Effect.Smoke.generate(this.x+8, this.y+8);
+            Sprite.delete(this.spr);
+            return true;
+        }
+        return false;
     }
 
     protected override setImage() 
@@ -580,15 +612,27 @@ class Bakugon extends GoInsideUnit
         this.sparkSpr = new Sprite()
         this.sparkSpr.setZ(EActorZ.EFFECT);
         this.sparkSpr.setLink(this.spr);
-        this.explodeTime = 300;
+        this.explodeTime = 60 * 15;
     }
 
     protected override update(): void 
     {
-        if (this.explode()) return;
+        if (this.doCollide()) return;
+        if (this.doTimeExplode()) return;
         super.update();
     }
 
+    protected override doCollide(): boolean 
+    {
+        if ((this.time>1 && this.getHit()!==null) || Hit.getHitRect(this.x, this.y, 16, 16, EActorColbit.EXPLODE)!==null)
+        {
+            new BakugonExplosion(this.x+8, this.y+8);
+            Sprite.delete(this.spr);
+            return true;
+        }
+        return false;
+    }
+    
     protected override setImage(): void
     {
         if (this.time<this.explodeTime - 120)
@@ -610,16 +654,21 @@ class Bakugon extends GoInsideUnit
         this.spr.setXY(this.x-4, this.y-8);
     }
 
-    private explode(): boolean
+    private doTimeExplode(): boolean
     {
         if (this.time>this.explodeTime)
         {// 爆発
-            new Effect.Explode.Generator(this.x+8, this.y+8);
+            new BakugonExplosion(this.x+8, this.y+8);
             Sprite.delete(this.spr);
-            Sprite.delete(this.sparkSpr);
             return true;
         }
         return false;
+    }
+
+    protected override destructor(): void 
+    {
+        super.destructor();
+        Sprite.delete(this.sparkSpr);
     }
 }
 
@@ -638,12 +687,24 @@ class Mush extends GoInsideUnit
 
     protected override update(): void 
     {
+        if (this.doCollide) return;
         if (this.time>this.lifespan) 
         {
             Sprite.delete(this.spr);
             return;
         }
         super.update();
+    }
+
+    protected override doCollide(): boolean 
+    {
+        if (Hit.getHitRect(this.x, this.y, 16, 16, EActorColbit.EXPLODE)!==null)
+        {
+            Effect.Smoke.generate(this.x+8, this.y+8);
+            Sprite.delete(this.spr);
+            return true;
+        }
+        return false;
     }
 
     protected override setImage(): void
@@ -694,6 +755,7 @@ class Bamboo extends CollideActor
                 {// その場所にないならオッケー
                     this.point1 = [x1, y1];
                     this.point2 = [x2, y2];
+                    //this.colbit = EActorColbit.CREATURE | EActorColbit.BAMBOO;
                     break;
                 }
             }
@@ -748,6 +810,9 @@ class PopManager extends Actor
         super.update();    
     }
 }
+
+
+
 
 
 /*
@@ -826,10 +891,61 @@ namespace Effect
                 super.update();
             }
         }
+
     }
+
+    // スモーク
+    export class Smoke extends Base
+    {
+        private constructor(private x: number, private y: number)
+        {
+            super();
+        }
+        protected override update(): void 
+        {
+            const span = 20;
+            if (this.time>=span * 2)
+            {
+                Sprite.delete(this.spr);
+                return;
+            }
+            this.spr.setXY(this.x, this.y);
+            this.spr.setImage(images.smoke,
+                Useful.floorDivide(this.time, span, 4)*32, 0, 32, 32);
+            super.update();
+        }
+        public static generate(x, y)
+        {
+            x -= 16; y -= 8;
+            new Smoke(x - 16, y - 16);
+            new Smoke(x + 16, y - 16);
+            new Smoke(x - 16, y + 16);
+            new Smoke(x + 16, y + 16);
+        }
+    }
+
 
 }
 
+
+class BakugonExplosion extends Effect.Explode.Generator
+{
+    col: CollideActor;
+
+    public constructor(x, y)
+    {
+        super(x, y);
+
+        this.col = new CollideActor(new Collider.Rectangle(-24, -24, 48, 48), EActorColbit.EXPLODE);
+        this.col.setX(x-8);
+        this.col.setY(y-8);
+    }
+    protected destructor(): void 
+    {
+        Sprite.delete(this.col.getSpr);
+        super.destructor();    
+    }
+}
 
 
 

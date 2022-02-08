@@ -219,7 +219,7 @@ class Title
             input.getKeyDown['Enter']) 
         {
             Sprite.disposeAll(true);
-            Sound.playSoundFile("./sounds/startPush.mp3");
+            Sound.playSoundFile("./sounds/game_start.mp3");
             SceneChage.toMain();
         }
     }
@@ -453,7 +453,8 @@ class Punicat extends MovableUnit
     {
         if (this.doCollide()===true) 
         {
-            gameState = GameState.OVER;
+            gameState = GameState.OVER
+            Sound.playSoundFile("./sounds/game_over.mp3");
             return;
         }
         this.moveArrow();
@@ -543,7 +544,8 @@ class Gorilla extends MovableUnit
         {
             Effect.Smoke.generate(this.x+8, this.y+8);
             Sprite.dispose(this.spr);
-            gameScore += 50;
+            gameScore += 200;
+            Sound.playSoundFile("./sounds/critical.mp3");
             return true;
         }
         return false;
@@ -759,6 +761,7 @@ class Mush extends GoInsideUnit
         }
         if (Punicat.sole.getIsAlive===true && this.getHitWith(Punicat.sole)===true)
         {
+            Sound.playSoundFile("./sounds/eat.mp3");
             new Effect.Star.Generator(this.x+8, this.y+8, 0);
             Sprite.dispose(this.spr);
             gameScore += 150;
@@ -849,6 +852,7 @@ class Bamboo extends CollideActor
         if (Punicat.sole.getIsAlive===true && this.getHitWith(Punicat.sole)===true)
         {
             new Effect.Star.Generator(this.x+8, this.y+8, 0, 6);
+            Sound.playSoundFile("./sounds/eat.mp3");
             Sprite.dispose(this.spr);
             gameScore += 100;
             return true;
@@ -1034,6 +1038,7 @@ class BalanceManager extends Actor
         if (Main.level>0)
         {
             Main.showLevelUpTime = 60 * 2;
+            Sound.playSoundFile("./sounds/level_up.mp3");
         }
         Main.level++;
         PopManager.sole.popTime = 0;
@@ -1234,6 +1239,7 @@ class BakugonExplosion extends Effect.Explode.Generator
         this.col = new CollideActor(new Collider.Rectangle(-24, -24, 48, 48), EActorColbit.EXPLODE);
         this.col.setX(x-8);
         this.col.setY(y-8);
+        Sound.playSoundFile("./sounds/explode.mp3");
     }
     protected destructor(): void 
     {
@@ -1382,12 +1388,20 @@ class ArrowController extends Actor
     {   
         if (this.getCanRotateR())
         {
-            if (this.timeOnPush+1 !== this.time) Arrow.sole.mat[x][y] += 1;
+            if (this.timeOnPush+1 !== this.time) 
+            {
+                Arrow.sole.mat[x][y] += 1;
+                Sound.playSoundFile("./sounds/tap.mp3");
+            }
             this.timeOnPush = this.time;
         }
         else if (this.getCanRotateL())
         {
-            if (this.timeOnPush+1 !== this.time) Arrow.sole.mat[x][y] += -1;
+            if (this.timeOnPush+1 !== this.time) 
+            {
+                Arrow.sole.mat[x][y] += -1;
+                Sound.playSoundFile("./sounds/tap.mp3");
+            }
             this.timeOnPush = this.time;
         }
         Arrow.sole.mat[x][y] = ((Arrow.sole.mat[x][y]+4) % 4) as EAngle;

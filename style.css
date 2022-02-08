@@ -1,0 +1,133 @@
+body{
+	background-color: #222;
+	color: #fff;
+	text-shadow: 2px 0 0 #111, 0 2px 0 #111, -2px 0 0 #111, 0 -2px 0 #111,
+	  2px 2px 0 #111, 2px -2px 0 #111, -2px 2px 0 #111, -2px -2px 0 #111;  
+	margin:0;
+	padding:0;
+}
+
+h1{
+	background-color: #eee;
+	color: #222;
+    text-align: center;
+	text-shadow: 2px 0 0 #fff, 0 2px 0 #fff, -2px 0 0 #fff, 0 -2px 0 #fff,
+	  2px 2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, -2px -2px 0 #fff;  
+	margin-top: 2%;
+	margin-bottom: 2%;
+	font-size: 50px;
+}
+
+
+.discription{
+	background-color: #eee;
+	color: #222;
+	text-shadow: 2px 0 0 #fff, 0 2px 0 #fff, -2px 0 0 #fff, 0 -2px 0 #fff,
+	  2px 2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, -2px -2px 0 #fff;  
+	margin-top: 2%;
+	margin-bottom: 2%;
+	font-size: 30px;
+	font-weight: bold;
+	padding-top: 1%;
+	padding-bottom: 1%;
+	padding-left: 8%;
+	padding-right: 2%;
+}
+
+.scoreranking{
+	background-color: #444;
+	color: #fff;
+	text-shadow: 2px 0 0 #222, 0 2px 0 #222, -2px 0 0 #222, 0 -2px 0 #222,
+	  2px 2px 0 #222, 2px -2px 0 #222, -2px 2px 0 #222, -2px -2px 0 #222;  
+	margin-top: 2%;
+	margin-bottom: 2%;
+	font-size: 30px;
+	font-weight: bold;
+	padding-top: 1%;
+	padding-bottom: 1%;
+	padding-left: 8%;
+	padding-right: 8%;
+	margin-left: 25%;
+	margin-right: 25%;
+	border-radius: 20px;
+}
+
+.center{
+	text-align: center;
+}
+
+.smalltext{
+	text-align: center;
+	color: #777;
+	font-size: 25px;
+}
+
+.rankorder{
+	background-color: #222;
+	color: #eee;
+	text-shadow: none;
+	border-radius: 8px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	padding-left: 40px;
+	padding-right: 40px;
+}
+
+
+.rankname{
+	background-color: #222;
+	color: #eee;
+	text-shadow: none;
+	border-radius: 8px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	padding-left: 30px;
+	padding-right: 30px;
+	margin-left: -5px;
+}
+
+
+.score-number{
+	background-color: #666;
+	text-align:right;
+	padding-right: 15%;
+	border-radius: 15px;
+	display: block;
+}
+
+.input-name{
+	margin-top: 20px;
+	text-align: center;
+	font-size: 30px;
+	background-color: #111;
+	color: #555;
+	padding-top: 1%;
+	padding-bottom: 1%;
+	padding-left: 8%;
+	padding-right: 8%;
+	margin-left: 30%;
+	margin-right: 30%;
+	border-radius: 20px;
+	user-select: none;
+}
+
+.name-form{
+	font-size: 25px;
+	height: 40px;
+	box-sizing: border-box;
+	color: #eee;
+	background-color: #222;
+	text-align: center;
+	border-radius: 10px;
+}
+
+#canvas-wrapper{
+	width:1248px;
+	height: 720px;
+	margin:0 auto;
+	border: 0.4em double #777;
+	border-radius: 12px;
+	/*background-image: url(./images/free-grass.png);*/
+}
+
+

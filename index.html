@@ -2,31 +2,33 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>コンベア</title>
-    <script type="text/javascript" src="./main.js"></script>
+    <title>ネコと矢印</title>
     <script type="module" src="./sprite.js"></script>
     <script type="module" src="./gameUtils.js"></script>
-    <link rel="stylesheet" href="../game04/style04.css">
+    <script type="module" src="./gameEngine.js"></script>
+    <script type="module" src="./main.js"></script>
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <h1>コンベア</h1>
+    <h1>ネコと矢印</h1>
     <div id="canvas-wrapper">
-        <canvas id="canvas1" width="1248" height="720"></canvas>
+        <canvas id="canvas1" width="1248" height="720" oncontextmenu="return false;"></canvas>
     </div>
     <div class="input-name">
-        [YOUR NAME]<br>
-        <input type="text" value="" onInput="checkForm(this)" class="name-form">
+        [ YOUR NAME ]<br>
+        <input type="text" value="" class="name-form" id="your-name">
     </div>
     <div class="discription">
         <p>
         [ 操作方法 ]<br>
-        キーボードの'W', 'A', 'S', 'D'で移動します<br>
-        フィールドに配置されているお芋を食べると得点が加算されます<br>
-        フィールドで徘徊している猫と接触するとゲームオーバーです<br>
-        迷路の行き止まりにはワープポイントが設置されています<br>
-        ワープポイントの行き先は、フィールドが生成されたときに一意的に定まっています<br>
-        'ICE'と書いてある床を踏むと一定時間の間、猫がアイス状になって食べる事が出来ます<br>
-        この時間の間にたくさん猫を食べるほど得点が加算されます
+        マウスカーソルでフィールド上の矢印を選んで右/左クリックで回転させます<br>
+        ネコなどは矢印に沿って進みます<br>
+        ネコがタケノコやマツタケを食べると得点が増えます<br>
+        <br>
+        爆発する爆弾モンスターに気を付けてください<br>
+        また、タケノコは速く食べないと腐ってゴリラになります<br>
+        ゴリラは矢印を勝手にいじるのでとても厄介です<br>
+        爆弾を誘導してゴリラを爆破させましょう<br>
 
      
         </p>

@@ -11,7 +11,7 @@ export class Sprite
     private v: number = 0;
     private width: number = 0;
     private height: number = 0;
-    private isReverse: boolean = false;
+    private isFlip: boolean = false;
     private isProtect: boolean = false;
     private link: Sprite = null;
     private blendPal: number = 1.0;
@@ -19,7 +19,7 @@ export class Sprite
     
     private updateMethod: (hSpr: Sprite) => void = function(hSp){};
     private drawingMethod: (hSpr: Sprite, hX: number, hY: number) => void = Sprite.DrawingProcess.rough;
-
+    private destructorMethod: (hSp: Sprite) => void = function(hSp){};
 
     
     private static sprites: Sprite[];
@@ -41,7 +41,7 @@ export class Sprite
         {
             this.image = image;
         }
-        if (u != undefined && v != undefined && w != undefined && h != undefined)
+        if (u !== undefined && v !== undefined && w !== undefined && h !== undefined)
         {
             this.u = u;
             this.v = v;
@@ -52,9 +52,9 @@ export class Sprite
     }
 
 
-    public setReverse(rev: boolean): void
+    public setFlip(rev: boolean): void
     {
-        this.isReverse = rev;
+        this.isFlip = rev;
     }
 
     
@@ -65,7 +65,10 @@ export class Sprite
 
     public setImage(image?: Graph, u?: number, v?: number, w?: number, h?: number): void
     {
-        if (image!=undefined) this.image = image;
+        if (image!==undefined) 
+            {this.image = image;}
+        else
+            {this.image = null;}
 
         if (u!==undefined) this.u = u;
         if (v!==undefined) this.v = v;
@@ -115,7 +118,7 @@ export class Sprite
 
     public getLinkDifferenceXY(): [number, number]
     {
-        if(this.link != null)
+        if(this.link !== null)
         {
             let linkSpr: Sprite = this.link;
             let dx, dy;
@@ -142,44 +145,56 @@ export class Sprite
         this.drawingMethod = func;
     }
 
+    public setdestructorMethod(func: (hSpr: Sprite) => void): void
+    {
+        this.destructorMethod = func;
+    }
+
     // 消去しないようにする
     public setProtect(protect: boolean): void
     {
         this.isProtect = protect;
     }
 
-    public static delete(spr: Sprite): void;
-    public static delete(spr: Sprite, isProtect: boolean): void;
+    public static dispose(spr: Sprite): void;
+    public static dispose(spr: Sprite, isProtect: boolean): void;
 
-    public static delete(spr: Sprite, isProtect: boolean = false): void
+    public static dispose(spr: Sprite, isProtect: boolean = false): void
     {
-        if (isProtect) return;
-        Useful.remove(Sprite.sprites, this);
+        if (isProtect===true && spr.isProtect===true) return;
+        spr.destructorMethod(spr);
+        this.sprites[this.sprites.indexOf(spr)] = null;
     }
 
-    public static deleteAll(isProtect: boolean=false)
+    public static disposeAll(isProtect: boolean=false)
     {
-        let target: Sprite[];
-        for(let i=this.sprites.length - 1; i>=0; i--)
+        for (let spr of this.sprites)
         {
-            if (isProtect && this.sprites[i].isProtect) continue; 
-            this.delete(this.sprites[i], isProtect);
+            if (spr!==null) Sprite.dispose(spr, isProtect);
         }
-}
+        this.garbageCollect();
+    }
 
 
 
-    static allUpdate(): void
+    public static updateAll(): void
     {
-        for(let i=0; i<this.sprites.length; i++)
+        for (let spr of this.sprites)
         {
-            this.sprites[i].updateMethod(this.sprites[i]);
+            if (spr!==null) spr.updateMethod(spr);
+        }
+        Sprite.garbageCollect();
+    }
+    private static garbageCollect(): void
+    {
+        while (this.sprites.indexOf(null)!==-1)
+        {
+            Useful.remove(this.sprites, null);
         }
     }
 
-    static allDrawing(): void
+    public static drawingAll(): void
     {
-        
         this.sprites.sort(function(a: Sprite, b: Sprite){return b.z-a.z});
 
         for (let i=0; i<this.sprites.length; i++)
@@ -188,7 +203,7 @@ export class Sprite
             {
 
                 let x, y;
-                if(spr.link!=null)
+                if(spr.link!==null)
                 {
                     let dx, dy;
                     [dx, dy] = spr.getLinkDifferenceXY();
@@ -222,9 +237,9 @@ export class Sprite
         }
         static draw(spr: Sprite, x, y, scale)
         {
-            if (spr.image==null) return;
+            if (spr.image===null) return;
 
-            if (spr.isReverse) 
+            if (spr.isFlip) 
             {
                 spr.image.drawTurnGraph(x, y, spr.u, spr.v, spr.width, spr.height, scale); 
             }

@@ -157,7 +157,7 @@ export class Useful
         return (min<=n && n <= max);
     }
     static isString(obj) {
-        return typeof (obj) == "string" || obj instanceof String;
+        return typeof (obj) === "string" || obj instanceof String;
     };
 
     static toInt(n: number): number
@@ -192,16 +192,40 @@ export class Useful
         }
     }
 
-    static remove(arr: Array<any>, target: any)
+    static remove(arr: Array<any>, target: any): boolean
     {
         let i=arr.indexOf(target);
-        if (i>-1) arr.splice(i, 1);
+        if (i>-1) 
+        {
+            arr.splice(i, 1);
+            return true;
+        }
+        return false;
     }
 
-    static mod(n: number, m: number)
+    static mod(n: number, m: number): number
     {
         let ret = n % m;
         return ret<0 ? ret+m : ret;
+    }
+
+    static initMat2<T>(width: number, height: number): T[][]
+    {
+        let arr: T[][] = new Array();
+        for (let x=0; x<width; x++) 
+        {
+            arr[x] = new Array();
+            for (let y=0; y<height; y++)
+            {
+                arr[x][y] = null;
+            }
+        }
+        return arr;
+    }
+
+    static floorDivide(n: number, range: number, devider: number): number
+    {
+        return ((n % range) / (range/devider)) | 0;
     }
 }
 
@@ -216,7 +240,7 @@ export class Input
 
     private mouse: Mouse
     public get getMouse(): Mouse {return this.mouse};
-    public static readonly Click = { NONE: -1,  RIGHT: 0 } as const
+    public static readonly Click = { NONE: -1,  LEFT: 0, MIDDLE: 1, RIGHT: 2 } as const
     
     private isKeyDown: {[key: string]: boolean} = {}
     public get getKeyDown(): {[key: string]: boolean} {return this.isKeyDown}; 
@@ -224,7 +248,7 @@ export class Input
 
     public constructor(keyUse: string[])
     {
-        if (Input.sole != null) console.error("Input instance has already exist.");
+        if (Input.sole !== null) console.error("Input instance has already exist.");
         Input.sole = this;
 
         this.mouse = new Mouse;
@@ -273,49 +297,48 @@ export class Input
         Input.sole.mouse.state = Input.Click.NONE;
     }
     
-    private static onMouseDown( e ) {
+    private static onMouseDown( e ) 
+    {
         Input.sole.mouse.state = e.button;
     }
     
-    private static onMouseUp( e ) {
+    private static onMouseUp( e ) 
+    {
         Input.sole.mouse.state = Input.Click.NONE;
     }
 
     
-    private static onKeyInit() {
-    for (let i=0; i<Input.sole.keyUse.length; i++)
+    private static onKeyInit() 
     {
-        Input.sole.isKeyDown[Input.sole.keyUse[i]] = false;
-    }
-}
-
-    private static onKeyDown(e) {
-    
-    for (let i=0; i<Input.sole.keyUse.length; i++)
-    {
-        let c = Input.sole.keyUse[i];
-        if (e.key === c || e.key === c.toUpperCase())
+        for (let i=0; i<Input.sole.keyUse.length; i++)
         {
-            Input.sole.isKeyDown[c] = true;
+            Input.sole.isKeyDown[Input.sole.keyUse[i]] = false;
         }
     }
-}
 
-    private static onKeyUp ( e ){
-    for (let i=0; i<Input.sole.keyUse.length; i++)
-    {
-        let c = Input.sole.keyUse[i];
-        if (e.key === c || e.key === c.toUpperCase())
+    private static onKeyDown(e) 
+    {    
+        for (let i=0; i<Input.sole.keyUse.length; i++)
         {
-            Input.sole.isKeyDown[c] = false;
+            let c = Input.sole.keyUse[i];
+            if (e.key === c || e.key === c.toUpperCase())
+            {
+                Input.sole.isKeyDown[c] = true;
+            }
         }
     }
-}
 
-
-
-
-    
+    private static onKeyUp ( e )
+    {
+        for (let i=0; i<Input.sole.keyUse.length; i++)
+        {
+            let c = Input.sole.keyUse[i];
+            if (e.key === c || e.key === c.toUpperCase())
+            {
+                Input.sole.isKeyDown[c] = false;
+            }
+        }
+    }
     
 }
 type Click = typeof Input.Click[keyof typeof Input.Click];
@@ -331,63 +354,21 @@ class Mouse
     {
         
     }
-}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// 基底オブジェクト
-export class Actor
-{
-    spr: Sprite;
-    time: number = 0;
-
-    constructor()
+    public get getXY(): [number, number]
     {
-        this.spr = new Sprite();
-        this.spr.setUpdateMethod(Actor.callUpdate)
-        this.spr.setBelong(this);
-    }
-
-    private static callUpdate(hSpr: Sprite): void
-    {
-        let self: Actor = hSpr.getBelong();
-        self.update();
-    }
-
-    protected update(): void
-    {
-        this.time++;
+        return [this.x, this.y]
     }
 }
 
-export abstract class ActorDrawingBySelf extends Actor
-{
-    constructor()
-    {
-        super();
-        this.spr.setDrawingMethod(ActorDrawingBySelf.callDrawing);
-    }
 
-    private static callDrawing(hSpr: Sprite, hX: number, hY: number): void
-    {
-        let self: ActorDrawingBySelf = hSpr.getBelong();
-        self.drawing(hX, hY);
-    }
 
-    protected abstract drawing(hX: number, hY: number): void;
-}
+
+
+
+
+
+
 
 
 
